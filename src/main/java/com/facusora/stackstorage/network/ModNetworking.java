@@ -21,5 +21,9 @@ public class ModNetworking
                 QuickStackPacket::encode,
                 QuickStackPacket::decode,
                 QuickStackPacket::handle);
+        CHANNEL.registerMessage(1, SortContainerPacket.class,
+                SortContainerPacket::encode,
+                SortContainerPacket::decode,
+                SortContainerPacket::handle);
     }
 }

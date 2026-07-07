@@ -3,6 +3,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'com.modrinth.minotaur' version '2.+'
 }
 
 version = mod_version
@@ -205,3 +206,19 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+// Publish to Modrinth with: ./gradlew modrinth
+// Requires MODRINTH_TOKEN env var (create at https://modrinth.com/settings/pats)
+// and the project created once on modrinth.com (slug below must match).
+modrinth {
+    token = System.getenv('MODRINTH_TOKEN')
+    projectId = 'stack-storage'
+    versionNumber = mod_version
+    versionName = "StackStorage ${mod_version} for Forge 1.20.1"
+    versionType = 'release'
+    uploadFile = jar
+    gameVersions = ['1.20.1']
+    loaders = ['forge']
+    changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
+}
+tasks.named('modrinth').configure { dependsOn('reobfJar') }

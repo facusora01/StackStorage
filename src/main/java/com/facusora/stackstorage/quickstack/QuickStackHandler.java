@@ -54,7 +54,7 @@ public class QuickStackHandler
 
             for (ContainerEntry entry : containers)
             {
-                if (mergeIntoExistingStacks(entry.container, stack))
+                if (transferToContainer(entry.container, stack))
                 {
                     entry.dirty = true;
                     movedAnything = true;
@@ -139,20 +139,25 @@ public class QuickStackHandler
     }
 
     /**
-     * Merges the given stack into slots of {@code container} that already hold the same
-     * item (same item + same NBT), shrinking {@code stack} in place. Never fills empty slots.
+     * Moves the given stack into {@code container}, shrinking {@code stack} in place.
+     * First tops off existing stacks of the same item (same item + same NBT); if the
+     * container already held that item, the remainder also goes into empty slots.
+     * A container that never held the item is left untouched.
      *
      * @return true if at least one item was moved
      */
-    private static boolean mergeIntoExistingStacks(Container container, ItemStack stack)
+    private static boolean transferToContainer(Container container, ItemStack stack)
     {
         boolean moved = false;
+        boolean containsType = false;
         int size = container.getContainerSize();
+
         for (int slot = 0; slot < size && !stack.isEmpty(); slot++)
         {
             ItemStack target = container.getItem(slot);
             if (target.isEmpty() || !ItemStack.isSameItemSameTags(target, stack))
                 continue;
+            containsType = true;
             if (!container.canPlaceItem(slot, stack))
                 continue;
 
@@ -165,6 +170,19 @@ public class QuickStackHandler
             target.grow(toMove);
             stack.shrink(toMove);
             moved = true;
+        }
+
+        if (containsType)
+        {
+            for (int slot = 0; slot < size && !stack.isEmpty(); slot++)
+            {
+                if (!container.getItem(slot).isEmpty() || !container.canPlaceItem(slot, stack))
+                    continue;
+
+                int toMove = Math.min(Math.min(stack.getMaxStackSize(), container.getMaxStackSize()), stack.getCount());
+                container.setItem(slot, stack.split(toMove));
+                moved = true;
+            }
         }
         return moved;
     }
