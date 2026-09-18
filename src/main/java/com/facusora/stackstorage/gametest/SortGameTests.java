@@ -96,6 +96,43 @@ public class SortGameTests
         helper.succeed();
     }
 
+    /**
+     * Pins the mineral column order, and the two items that carry no Forge family tag:
+     * charcoal rides under coal, and netherite scrap takes the raw row of netherite.
+     */
+    @GameTest(template = "empty")
+    public static void verticalUsesTheMineralValueOrder(GameTestHelper helper)
+    {
+        SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
+        Item[] scrambled = {
+                Items.AMETHYST_SHARD, Items.QUARTZ, Items.COAL, Items.LAPIS_LAZULI, Items.REDSTONE,
+                Items.COPPER_INGOT, Items.IRON_INGOT, Items.GOLD_INGOT, Items.EMERALD,
+                Items.DIAMOND, Items.NETHERITE_INGOT};
+        for (int i = 0; i < scrambled.length; i++)
+            container.setItem(i, new ItemStack(scrambled[i], 64));
+        container.setItem(20, new ItemStack(Items.CHARCOAL, 64));
+        container.setItem(30, new ItemStack(Items.NETHERITE_SCRAP, 64));
+
+        ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
+
+        Item[] expected = {
+                Items.NETHERITE_INGOT, Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT,
+                Items.IRON_INGOT, Items.COPPER_INGOT, Items.REDSTONE, Items.LAPIS_LAZULI,
+                Items.COAL};
+        for (int column = 0; column < expected.length; column++)
+            assertAt(helper, container, 1, column, expected[column]);
+
+        // Netherite scrap is the raw form, so it sits at the bottom of the netherite column
+        assertAt(helper, container, 4, 0, Items.NETHERITE_SCRAP);
+        // Charcoal sits directly under coal in the same column
+        assertAt(helper, container, 2, 8, Items.CHARCOAL);
+        // Only nine columns fit, so amethyst and quartz fall through to the leftovers
+        helper.assertTrue(tally(container).containsKey(Items.AMETHYST_SHARD), "amethyst went missing");
+        helper.assertTrue(tally(container).containsKey(Items.QUARTZ), "quartz went missing");
+
+        helper.succeed();
+    }
+
     /** Three rows cannot hold a full armor set, so those containers stay alphabetical. */
     @GameTest(template = "empty")
     public static void verticalFallsBackOnShortContainer(GameTestHelper helper)

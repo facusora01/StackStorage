@@ -57,17 +57,19 @@ public final class ItemFamilies
     private static final String RAW_PREFIX = "raw_";
 
     /**
-     * Vanilla items that belong to a material but carry no Forge family tag. Coal is the
-     * notable one: {@code forge:storage_blocks/coal} exists, but the coal item itself is
-     * only in {@code minecraft:coals}, so without this it would never join its own block.
+     * Vanilla items that belong to a material but carry no Forge family tag, so they
+     * would otherwise never find their own column. Charcoal rides just under coal, and
+     * netherite scrap takes the raw row of the netherite column, which is what it is.
      */
     private static final Map<ResourceLocation, Family> UNTAGGED = Map.of(
-            new ResourceLocation("minecraft", "coal"), new Family(Kind.MINERAL, "coal", 1));
+            new ResourceLocation("minecraft", "coal"), new Family(Kind.MINERAL, "coal", 1),
+            new ResourceLocation("minecraft", "charcoal"), new Family(Kind.MINERAL, "coal", 2),
+            new ResourceLocation("minecraft", "netherite_scrap"), new Family(Kind.MINERAL, "netherite", 4));
 
     /** Column order, most valuable first. Materials missing here sort alphabetically after these. */
     private static final List<String> MINERAL_ORDER = List.of(
             "netherite", "diamond", "emerald", "gold", "iron", "copper",
-            "amethyst", "lapis", "redstone", "quartz", "coal");
+            "redstone", "lapis", "coal", "quartz", "amethyst");
 
     private static final List<String> ARMOR_ORDER = List.of(
             "netherite", "diamond", "iron", "gold", "chainmail", "turtle", "leather");
