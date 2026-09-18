@@ -37,7 +37,12 @@ public class QuickStackAnimations
     private static final float FLIGHT_TICKS = 24.0F;
     /** Items leave one after another rather than in lockstep, up to this much of a wait. */
     private static final int MAX_STAGGER_TICKS = 40;
-    private static final float ARC_HEIGHT = 0.9F;
+    private static final float ARC_HEIGHT = 0.35F;
+    /**
+     * How much of the path is covered at a flat speed: 1 is fully linear, 0 is a hard
+     * squared curve. In between the item eases in without lurching at the end.
+     */
+    private static final float LINEAR_SHARE = 0.6F;
     private static final float SCALE = 0.75F;
     private static final float SPIN_DEGREES_PER_TICK = 10.0F;
 
@@ -145,9 +150,9 @@ public class QuickStackAnimations
 
         Vec3 positionAt(float progress)
         {
-            // Squared so the item drifts out of the player and then pulls into the
-            // container, rather than covering the distance at a flat speed
-            float eased = progress * progress;
+            // Part flat speed, part squared, so the item picks up pace towards the
+            // container without the squared curve's late lurch
+            float eased = progress * (LINEAR_SHARE + (1.0F - LINEAR_SHARE) * progress);
 
             double x = Mth.lerp(eased, origin.x, target.x);
             double z = Mth.lerp(eased, origin.z, target.z);
