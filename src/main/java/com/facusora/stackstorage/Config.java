@@ -12,7 +12,7 @@ public class Config
 
     private static final ForgeConfigSpec.IntValue QUICK_STACK_RADIUS = BUILDER
             .comment("Radius (in blocks) around the player to search for chests/barrels/shulker boxes when quick stacking")
-            .defineInRange("quickStackRadius", 8, 1, 64);
+            .defineInRange("quickStackRadius", 5, 1, 64);
 
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
