@@ -70,6 +70,32 @@ public class SortGameTests
         helper.succeed();
     }
 
+    /**
+     * A material with a single tier present still gets its own column, in its place in
+     * the value order, rather than being dumped in with the unrecognised items.
+     */
+    @GameTest(template = "empty")
+    public static void verticalOrdersSingleTierMinerals(GameTestHelper helper)
+    {
+        SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
+        container.setItem(0, new ItemStack(Items.LAPIS_LAZULI, 64));
+        container.setItem(1, new ItemStack(Items.IRON_INGOT, 64));
+        container.setItem(2, new ItemStack(Items.EMERALD, 64));
+        container.setItem(3, new ItemStack(Items.DIAMOND, 64));
+
+        ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
+
+        // All four are the loose form, so they share row 1 with the block row left empty
+        assertAt(helper, container, 1, 0, Items.DIAMOND);
+        assertAt(helper, container, 1, 1, Items.EMERALD);
+        assertAt(helper, container, 1, 2, Items.IRON_INGOT);
+        assertAt(helper, container, 1, 3, Items.LAPIS_LAZULI);
+        assertEmptyAt(helper, container, 0, 0);
+        assertEmptyAt(helper, container, 0, 3);
+
+        helper.succeed();
+    }
+
     /** Three rows cannot hold a full armor set, so those containers stay alphabetical. */
     @GameTest(template = "empty")
     public static void verticalFallsBackOnShortContainer(GameTestHelper helper)

@@ -2,11 +2,14 @@ package com.facusora.stackstorage.client;
 
 import com.facusora.stackstorage.StackStorageMod;
 import com.facusora.stackstorage.quickstack.SortMode;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Small "S" button shown on container screens. Texture holds two 12x12 states
@@ -33,6 +36,17 @@ public class SortButton extends Button
     protected boolean isValidClickButton(int button)
     {
         return button == 0 || button == 1;
+    }
+
+    /**
+     * Keeps the button out of the Tab cycle. A focused widget shows its tooltip, so
+     * otherwise tabbing around the chest screen pops the help text open over the slots.
+     */
+    @Nullable
+    @Override
+    public ComponentPath nextFocusPath(FocusNavigationEvent event)
+    {
+        return null;
     }
 
     @Override

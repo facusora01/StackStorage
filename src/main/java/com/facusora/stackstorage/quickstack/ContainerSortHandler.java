@@ -116,23 +116,12 @@ public class ContainerSortHandler
                 leftovers.add(stack);
         }
 
-        // A mineral on its own is not worth a column of mostly gaps (a lone brick, say);
-        // it reads better down in the alphabetical block. Armor keeps its column even as
-        // a single piece, because the gaps are exactly what show which pieces are missing.
-        List<Column> columns = new ArrayList<>();
-        for (Column column : byMaterial.values())
-        {
-            if (column.family.kind() == ItemFamilies.Kind.ARMOR || column.occupiedTiers() > 1)
-                columns.add(column);
-            else
-                for (MergedStack stack : column.byTier)
-                    if (stack != null)
-                        leftovers.add(stack);
-        }
-
-        if (columns.isEmpty())
+        if (byMaterial.isEmpty())
             return leftovers;
 
+        // Every recognised material gets its column, even with a single tier present:
+        // the point of the layout is that a material always sits where you expect it.
+        List<Column> columns = new ArrayList<>(byMaterial.values());
         columns.sort(Comparator.comparing(c -> c.family, ItemFamilies.COLUMN_ORDER));
 
         int rows = container.getContainerSize() / WIDTH;
@@ -250,15 +239,6 @@ public class ContainerSortHandler
         {
             this.family = family;
             this.byTier = new MergedStack[family.kind().tiers];
-        }
-
-        int occupiedTiers()
-        {
-            int count = 0;
-            for (MergedStack stack : byTier)
-                if (stack != null)
-                    count++;
-            return count;
         }
     }
 

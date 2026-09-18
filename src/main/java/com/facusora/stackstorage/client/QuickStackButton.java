@@ -1,12 +1,15 @@
 package com.facusora.stackstorage.client;
 
 import com.facusora.stackstorage.StackStorageMod;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Icon button styled like the recipe book toggle. The texture holds two 20x18
@@ -39,6 +42,17 @@ public class QuickStackButton extends Button
                 Component.translatable("button.stackstorage.quick_stack"), onPress, DEFAULT_NARRATION);
         this.screen = screen;
         setTooltip(Tooltip.create(Component.translatable("button.stackstorage.quick_stack.tooltip")));
+    }
+
+    /**
+     * Keeps the button out of the Tab cycle. A focused widget shows its tooltip, so
+     * otherwise tabbing around the inventory pops the help text open over the slots.
+     */
+    @Nullable
+    @Override
+    public ComponentPath nextFocusPath(FocusNavigationEvent event)
+    {
+        return null;
     }
 
     @Override
