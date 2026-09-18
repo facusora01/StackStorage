@@ -34,12 +34,12 @@ import java.util.List;
 public class QuickStackAnimations
 {
     /** How long one item takes to reach its container. */
-    private static final float FLIGHT_TICKS = 10.0F;
+    private static final float FLIGHT_TICKS = 24.0F;
     /** Items leave one after another rather than in lockstep, up to this much of a wait. */
     private static final int MAX_STAGGER_TICKS = 40;
     private static final float ARC_HEIGHT = 0.9F;
-    private static final float SCALE = 0.4F;
-    private static final float SPIN_DEGREES_PER_TICK = 18.0F;
+    private static final float SCALE = 0.75F;
+    private static final float SPIN_DEGREES_PER_TICK = 10.0F;
 
     private static final List<FlyingItem> ACTIVE = new ArrayList<>();
     private static long clientTicks;
@@ -145,11 +145,16 @@ public class QuickStackAnimations
 
         Vec3 positionAt(float progress)
         {
-            double x = Mth.lerp(progress, origin.x, target.x);
-            double z = Mth.lerp(progress, origin.z, target.z);
-            // A sine bump so the item arcs over instead of sliding along a straight line
-            double y = Mth.lerp(progress, origin.y, target.y)
-                    + Math.sin(progress * Math.PI) * ARC_HEIGHT;
+            // Squared so the item drifts out of the player and then pulls into the
+            // container, rather than covering the distance at a flat speed
+            float eased = progress * progress;
+
+            double x = Mth.lerp(eased, origin.x, target.x);
+            double z = Mth.lerp(eased, origin.z, target.z);
+            // A sine bump so the item arcs over instead of sliding along a straight line.
+            // Driven by the eased value too, so the peak lands halfway along the path.
+            double y = Mth.lerp(eased, origin.y, target.y)
+                    + Math.sin(eased * Math.PI) * ARC_HEIGHT;
             return new Vec3(x, y, z);
         }
     }
