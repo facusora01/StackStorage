@@ -61,23 +61,25 @@ public class QuickStackAnimations
     public static void play(QuickStackAnimationPacket packet)
     {
         Vec3 origin = packet.origin();
-        List<QuickStackAnimationPacket.Transfer> transfers = packet.transfers();
+        long now = clientTicks;
 
         // Queue per container rather than over the whole batch: what has to be spread
-        // out is the items sharing a trajectory, not the batch as a whole
-        Map<BlockPos, Integer> queued = new HashMap<>();
+        // out is the items sharing a trajectory, not the batch as a whole. Seeded from
+        // what is still on its way, so a second quick stack falls in behind the first
+        // instead of flying through it.
+        Map<BlockPos, Long> nextDeparture = new HashMap<>();
+        for (FlyingItem item : ACTIVE)
+            nextDeparture.merge(item.target, item.startTick + SAME_TARGET_STAGGER_TICKS, Math::max);
 
-        for (QuickStackAnimationPacket.Transfer transfer : transfers)
+        for (QuickStackAnimationPacket.Transfer transfer : packet.transfers())
         {
             BlockPos target = transfer.target();
-            int place = queued.merge(target, 1, Integer::sum) - 1;
-            long delay = Math.min((long) place * SAME_TARGET_STAGGER_TICKS, MAX_STAGGER_TICKS);
+            long departure = Math.min(
+                    Math.max(now, nextDeparture.getOrDefault(target, now)),
+                    now + MAX_STAGGER_TICKS);
+            nextDeparture.put(target, departure + SAME_TARGET_STAGGER_TICKS);
 
-            ACTIVE.add(new FlyingItem(
-                    new ItemStack(transfer.item()),
-                    origin,
-                    new Vec3(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5),
-                    clientTicks + delay));
+            ACTIVE.add(new FlyingItem(new ItemStack(transfer.item()), origin, target, departure));
         }
     }
 
@@ -141,14 +143,17 @@ public class QuickStackAnimations
     {
         final ItemStack stack;
         final Vec3 origin;
-        final Vec3 target;
+        /** Kept as the block so items heading for one container can share a queue. */
+        final BlockPos target;
+        final Vec3 destination;
         final long startTick;
 
-        FlyingItem(ItemStack stack, Vec3 origin, Vec3 target, long startTick)
+        FlyingItem(ItemStack stack, Vec3 origin, BlockPos target, long startTick)
         {
             this.stack = stack;
             this.origin = origin;
             this.target = target;
+            this.destination = new Vec3(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
             this.startTick = startTick;
         }
 
@@ -169,11 +174,11 @@ public class QuickStackAnimations
             // container without the squared curve's late lurch
             float eased = progress * (LINEAR_SHARE + (1.0F - LINEAR_SHARE) * progress);
 
-            double x = Mth.lerp(eased, origin.x, target.x);
-            double z = Mth.lerp(eased, origin.z, target.z);
+            double x = Mth.lerp(eased, origin.x, destination.x);
+            double z = Mth.lerp(eased, origin.z, destination.z);
             // A sine bump so the item arcs over instead of sliding along a straight line.
             // Driven by the eased value too, so the peak lands halfway along the path.
-            double y = Mth.lerp(eased, origin.y, target.y)
+            double y = Mth.lerp(eased, origin.y, destination.y)
                     + Math.sin(eased * Math.PI) * ARC_HEIGHT;
             return new Vec3(x, y, z);
         }
