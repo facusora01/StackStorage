@@ -2,8 +2,11 @@ package com.facusora.stackstorage.network;
 
 import com.facusora.stackstorage.StackStorageMod;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
+
+import java.util.Optional;
 
 public class ModNetworking
 {
@@ -25,5 +28,10 @@ public class ModNetworking
                 SortContainerPacket::encode,
                 SortContainerPacket::decode,
                 SortContainerPacket::handle);
+        CHANNEL.registerMessage(2, QuickStackAnimationPacket.class,
+                QuickStackAnimationPacket::encode,
+                QuickStackAnimationPacket::decode,
+                QuickStackAnimationPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
 }

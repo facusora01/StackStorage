@@ -1,7 +1,10 @@
 package com.facusora.stackstorage.quickstack;
 
 import com.facusora.stackstorage.Config;
+import com.facusora.stackstorage.network.ModNetworking;
+import com.facusora.stackstorage.network.QuickStackAnimationPacket;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -16,6 +19,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,6 +29,13 @@ import java.util.Set;
 
 public class QuickStackHandler
 {
+    private static final int COOLDOWN_TICKS = 10;
+    private static final String COOLDOWN_KEY = "stackstorage:quick_stack_ready_at";
+
+    /** Extra blocks past the search radius, so onlookers standing back still see the items. */
+    private static final int VIEW_MARGIN = 32;
+
+
     /**
      * Moves items from the player's main inventory + hotbar into nearby containers,
      * but only topping off stacks of item types the container already holds.
@@ -33,6 +45,8 @@ public class QuickStackHandler
     public static void performQuickStack(ServerPlayer player, Set<Item> lockedItems)
     {
         if (!player.isAlive() || player.isSpectator())
+            return;
+        if (isOnCooldown(player))
             return;
 
         ServerLevel level = player.serverLevel();
@@ -45,19 +59,20 @@ public class QuickStackHandler
         // Closest containers absorb items first
         containers.sort((a, b) -> Double.compare(a.distSqr, b.distSqr));
 
-        boolean movedAnything = false;
+        List<QuickStackAnimationPacket.Transfer> transfers = new ArrayList<>();
         List<ItemStack> playerItems = player.getInventory().items; // 36 slots: main + hotbar
         for (ItemStack stack : playerItems)
         {
             if (stack.isEmpty() || lockedItems.contains(stack.getItem()))
                 continue;
 
+            Item item = stack.getItem(); // captured before the stack can be emptied
             for (ContainerEntry entry : containers)
             {
                 if (transferToContainer(entry.container, stack))
                 {
                     entry.dirty = true;
-                    movedAnything = true;
+                    transfers.add(new QuickStackAnimationPacket.Transfer(entry.pos, item));
                 }
                 if (stack.isEmpty())
                     break;
@@ -70,11 +85,47 @@ public class QuickStackHandler
                 entry.container.setChanged();
         }
 
-        if (movedAnything)
+        if (!transfers.isEmpty())
         {
             player.getInventory().setChanged();
             level.playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.3F, 1.2F);
+            sendAnimation(player, level, radius, transfers);
         }
+    }
+
+    /**
+     * Tells every client watching the area to fly the items across. Sent to the whole
+     * area rather than just the sender, since the quick stack sound already carries
+     * that far and a silent-but-visible mismatch would read as a bug.
+     */
+    private static void sendAnimation(ServerPlayer player, ServerLevel level, int radius,
+                                      List<QuickStackAnimationPacket.Transfer> transfers)
+    {
+        Vec3 origin = new Vec3(player.getX(), player.getY() + player.getBbHeight() * 0.6, player.getZ());
+        ModNetworking.CHANNEL.send(
+                PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
+                        player.getX(), player.getY(), player.getZ(),
+                        radius + VIEW_MARGIN, level.dimension())),
+                new QuickStackAnimationPacket(origin, transfers));
+    }
+
+    /**
+     * Quick stacking scans the block entities of every chunk in range, so a client
+     * holding the button down would have the server sweeping them every tick and the
+     * whole area watching items fly non stop.
+     */
+    private static boolean isOnCooldown(ServerPlayer player)
+    {
+        long now = player.level().getGameTime();
+        CompoundTag data = player.getPersistentData();
+        long readyAt = data.getLong(COOLDOWN_KEY);
+
+        // A value far in the future means it came from another world, not a real cooldown
+        if (readyAt > now && readyAt <= now + COOLDOWN_TICKS)
+            return true;
+
+        data.putLong(COOLDOWN_KEY, now + COOLDOWN_TICKS);
+        return false;
     }
 
     /**
@@ -131,7 +182,7 @@ public class QuickStackHandler
                     }
 
                     if (container != null)
-                        containers.add(new ContainerEntry(container, distSqr));
+                        containers.add(new ContainerEntry(container, pos, distSqr));
                 }
             }
         }
@@ -190,12 +241,15 @@ public class QuickStackHandler
     private static class ContainerEntry
     {
         final Container container;
+        /** Where the items should fly to; for a double chest, the half we found first. */
+        final BlockPos pos;
         final double distSqr;
         boolean dirty = false;
 
-        ContainerEntry(Container container, double distSqr)
+        ContainerEntry(Container container, BlockPos pos, double distSqr)
         {
             this.container = container;
+            this.pos = pos;
             this.distSqr = distSqr;
         }
     }
