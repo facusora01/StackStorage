@@ -25,7 +25,7 @@ public final class ItemFamilies
     {
         /** Helmet, chestplate, leggings, boots. */
         ARMOR(4),
-        /** Storage block, ingot/gem/dust, nugget, raw block, raw ore. */
+        /** Storage block, ingot/gem/dust, nugget, raw ore, raw block. */
         MINERAL(5);
 
         public final int tiers;
@@ -50,21 +50,23 @@ public final class ItemFamilies
             "gems", 1,
             "dusts", 1,
             "nuggets", 2,
-            "raw_materials", 4);
+            "raw_materials", 3);
 
-    /** Row for {@code forge:storage_blocks/raw_<material>}: right above the loose raw ore. */
-    private static final int RAW_BLOCK_TIER = 3;
+    /** Row for {@code forge:storage_blocks/raw_<material>}: the bottom of the column. */
+    private static final int RAW_BLOCK_TIER = 4;
     private static final String RAW_PREFIX = "raw_";
 
     /**
      * Vanilla items that belong to a material but carry no Forge family tag, so they
      * would otherwise never find their own column. Charcoal rides just under coal, and
-     * netherite scrap takes the raw row of the netherite column, which is what it is.
+     * netherite fills its two empty rows with the forms it actually has: ancient debris
+     * where the nugget would go, then the scrap it smelts into.
      */
     private static final Map<ResourceLocation, Family> UNTAGGED = Map.of(
             new ResourceLocation("minecraft", "coal"), new Family(Kind.MINERAL, "coal", 1),
             new ResourceLocation("minecraft", "charcoal"), new Family(Kind.MINERAL, "coal", 2),
-            new ResourceLocation("minecraft", "netherite_scrap"), new Family(Kind.MINERAL, "netherite", 4));
+            new ResourceLocation("minecraft", "ancient_debris"), new Family(Kind.MINERAL, "netherite", 2),
+            new ResourceLocation("minecraft", "netherite_scrap"), new Family(Kind.MINERAL, "netherite", 3));
 
     /** Column order, most valuable first. Materials missing here sort alphabetically after these. */
     private static final List<String> MINERAL_ORDER = List.of(

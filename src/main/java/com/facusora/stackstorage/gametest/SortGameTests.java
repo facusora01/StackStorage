@@ -61,8 +61,8 @@ public class SortGameTests
         assertAt(helper, container, 0, 2, Items.IRON_BLOCK);
         assertAt(helper, container, 1, 2, Items.IRON_INGOT);
         assertAt(helper, container, 2, 2, Items.IRON_NUGGET);
-        assertAt(helper, container, 3, 2, Items.RAW_IRON_BLOCK);
-        assertAt(helper, container, 4, 2, Items.RAW_IRON);
+        assertAt(helper, container, 3, 2, Items.RAW_IRON);
+        assertAt(helper, container, 4, 2, Items.RAW_IRON_BLOCK);
 
         // Cobblestone belongs to no family, so it starts right after the columns
         assertAt(helper, container, 0, 3, Items.COBBLESTONE);
@@ -97,8 +97,8 @@ public class SortGameTests
     }
 
     /**
-     * Pins the mineral column order, and the two items that carry no Forge family tag:
-     * charcoal rides under coal, and netherite scrap takes the raw row of netherite.
+     * Pins the mineral column order, and the items that carry no Forge family tag:
+     * charcoal rides under coal, and netherite runs block, ingot, debris, scrap.
      */
     @GameTest(template = "empty")
     public static void verticalUsesTheMineralValueOrder(GameTestHelper helper)
@@ -112,6 +112,8 @@ public class SortGameTests
             container.setItem(i, new ItemStack(scrambled[i], 64));
         container.setItem(20, new ItemStack(Items.CHARCOAL, 64));
         container.setItem(30, new ItemStack(Items.NETHERITE_SCRAP, 64));
+        container.setItem(31, new ItemStack(Items.NETHERITE_BLOCK, 64));
+        container.setItem(32, new ItemStack(Items.ANCIENT_DEBRIS, 64));
 
         ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
 
@@ -122,8 +124,10 @@ public class SortGameTests
         for (int column = 0; column < expected.length; column++)
             assertAt(helper, container, 1, column, expected[column]);
 
-        // Netherite scrap is the raw form, so it sits at the bottom of the netherite column
-        assertAt(helper, container, 4, 0, Items.NETHERITE_SCRAP);
+        // Netherite reads block, ingot, ancient debris, scrap from the top
+        assertAt(helper, container, 0, 0, Items.NETHERITE_BLOCK);
+        assertAt(helper, container, 2, 0, Items.ANCIENT_DEBRIS);
+        assertAt(helper, container, 3, 0, Items.NETHERITE_SCRAP);
         // Charcoal sits directly under coal in the same column
         assertAt(helper, container, 2, 8, Items.CHARCOAL);
         // Only nine columns fit, so amethyst and quartz fall through to the leftovers

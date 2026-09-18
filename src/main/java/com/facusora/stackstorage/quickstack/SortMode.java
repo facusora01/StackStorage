@@ -10,7 +10,7 @@ public enum SortMode
     ALPHABETICAL,
     /**
      * Give each material family its own column, one row per tier: iron block on top,
-     * then ingot, nugget, raw block, raw ore. Armor sets work the same way with
+     * then ingot, nugget, raw ore, raw block. Armor sets work the same way with
      * helmet / chestplate / leggings / boots. Missing pieces leave their row empty so
      * the columns stay aligned and the gap shows what is missing.
      */
