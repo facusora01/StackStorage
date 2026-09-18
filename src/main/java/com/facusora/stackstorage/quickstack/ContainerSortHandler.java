@@ -53,6 +53,15 @@ public class ContainerSortHandler
                 ? chestMenu.getContainer()
                 : menu.getSlot(0).container; // ShulkerBoxMenu keeps its container private; slot 0 is always the box
 
+        sortContainer(container, mode);
+    }
+
+    /**
+     * Rearranges a container in place. Split out from the menu plumbing so the layout
+     * can be exercised on a bare container.
+     */
+    public static void sortContainer(Container container, SortMode mode)
+    {
         int size = container.getContainerSize();
         ItemStack[] layout = new ItemStack[size];
         boolean[] reserved = new boolean[size];
