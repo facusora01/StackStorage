@@ -20,8 +20,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Flies the quick stacked items from the player into the containers that took them.
@@ -35,8 +37,15 @@ public class QuickStackAnimations
 {
     /** How long one item takes to reach its container. */
     private static final float FLIGHT_TICKS = 24.0F;
-    /** Items leave one after another rather than in lockstep, up to this much of a wait. */
-    private static final int MAX_STAGGER_TICKS = 40;
+    /**
+     * Gap between two items heading for the same container. They share a trajectory, so
+     * without a real gap they fly stacked on top of each other and read as one item.
+     * Items bound for different containers are free to leave together: their paths
+     * diverge immediately.
+     */
+    private static final int SAME_TARGET_STAGGER_TICKS = 5;
+    /** Ceiling on that wait, so emptying a full inventory into one chest still ends. */
+    private static final int MAX_STAGGER_TICKS = 60;
     private static final float ARC_HEIGHT = 0.35F;
     /**
      * How much of the path is covered at a flat speed: 1 is fully linear, 0 is a hard
@@ -54,15 +63,21 @@ public class QuickStackAnimations
         Vec3 origin = packet.origin();
         List<QuickStackAnimationPacket.Transfer> transfers = packet.transfers();
 
-        for (int i = 0; i < transfers.size(); i++)
+        // Queue per container rather than over the whole batch: what has to be spread
+        // out is the items sharing a trajectory, not the batch as a whole
+        Map<BlockPos, Integer> queued = new HashMap<>();
+
+        for (QuickStackAnimationPacket.Transfer transfer : transfers)
         {
-            QuickStackAnimationPacket.Transfer transfer = transfers.get(i);
             BlockPos target = transfer.target();
+            int place = queued.merge(target, 1, Integer::sum) - 1;
+            long delay = Math.min((long) place * SAME_TARGET_STAGGER_TICKS, MAX_STAGGER_TICKS);
+
             ACTIVE.add(new FlyingItem(
                     new ItemStack(transfer.item()),
                     origin,
                     new Vec3(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5),
-                    clientTicks + Math.min(i, MAX_STAGGER_TICKS)));
+                    clientTicks + delay));
         }
     }
 
