@@ -64,8 +64,8 @@ public class SortGameTests
         assertAt(helper, container, 3, 2, Items.RAW_IRON);
         assertAt(helper, container, 4, 2, Items.RAW_IRON_BLOCK);
 
-        // Cobblestone belongs to no family, so it starts right after the columns
-        assertAt(helper, container, 0, 3, Items.COBBLESTONE);
+        // Cobblestone belongs to no family, so it goes to the very end of the chest
+        assertAt(helper, container, 5, 8, Items.COBBLESTONE);
 
         helper.succeed();
     }
@@ -85,13 +85,13 @@ public class SortGameTests
 
         ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
 
-        // All four are the loose form, so they share row 1 with the block row left empty
-        assertAt(helper, container, 1, 0, Items.DIAMOND);
-        assertAt(helper, container, 1, 1, Items.EMERALD);
-        assertAt(helper, container, 1, 2, Items.IRON_INGOT);
-        assertAt(helper, container, 1, 3, Items.LAPIS_LAZULI);
-        assertEmptyAt(helper, container, 0, 0);
-        assertEmptyAt(helper, container, 0, 3);
+        // No row is held back for the missing blocks: each sits at the top of its column
+        assertAt(helper, container, 0, 0, Items.DIAMOND);
+        assertAt(helper, container, 0, 1, Items.EMERALD);
+        assertAt(helper, container, 0, 2, Items.IRON_INGOT);
+        assertAt(helper, container, 0, 3, Items.LAPIS_LAZULI);
+        assertEmptyAt(helper, container, 1, 0);
+        assertEmptyAt(helper, container, 1, 3);
 
         helper.succeed();
     }
@@ -118,21 +118,98 @@ public class SortGameTests
         ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
 
         Item[] expected = {
-                Items.NETHERITE_INGOT, Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT,
+                Items.NETHERITE_BLOCK, Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT,
                 Items.IRON_INGOT, Items.COPPER_INGOT, Items.REDSTONE, Items.LAPIS_LAZULI,
                 Items.COAL};
         for (int column = 0; column < expected.length; column++)
-            assertAt(helper, container, 1, column, expected[column]);
+            assertAt(helper, container, 0, column, expected[column]);
 
         // Netherite reads block, ingot, ancient debris, scrap from the top
-        assertAt(helper, container, 0, 0, Items.NETHERITE_BLOCK);
+        assertAt(helper, container, 1, 0, Items.NETHERITE_INGOT);
         assertAt(helper, container, 2, 0, Items.ANCIENT_DEBRIS);
         assertAt(helper, container, 3, 0, Items.NETHERITE_SCRAP);
         // Charcoal sits directly under coal in the same column
-        assertAt(helper, container, 2, 8, Items.CHARCOAL);
+        assertAt(helper, container, 1, 8, Items.CHARCOAL);
         // Only nine columns fit, so amethyst and quartz fall through to the leftovers
         helper.assertTrue(tally(container).containsKey(Items.AMETHYST_SHARD), "amethyst went missing");
         helper.assertTrue(tally(container).containsKey(Items.QUARTZ), "quartz went missing");
+
+        helper.succeed();
+    }
+
+    /**
+     * The overfilled chest from in-game testing, checked against the layout it should
+     * have produced. Every stack of a material stays in its column with no rows held
+     * back, and a full column spills into the nearest neighbour with room, bottom up.
+     */
+    @GameTest(template = "empty")
+    public static void verticalSpillsFullColumnsIntoNeighbours(GameTestHelper helper)
+    {
+        SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
+        Object[][] contents = {
+                {Items.NETHERITE_BLOCK, 1}, {Items.NETHERITE_INGOT, 64}, {Items.NETHERITE_INGOT, 64},
+                {Items.NETHERITE_INGOT, 64}, {Items.ANCIENT_DEBRIS, 1}, {Items.NETHERITE_SCRAP, 64},
+                {Items.NETHERITE_SCRAP, 64}, {Items.DIAMOND_BLOCK, 32}, {Items.DIAMOND, 64},
+                {Items.EMERALD, 64}, {Items.GOLD_INGOT, 64}, {Items.GOLD_INGOT, 64},
+                {Items.GOLD_INGOT, 64}, {Items.GOLD_NUGGET, 64}, {Items.GOLD_NUGGET, 64},
+                {Items.RAW_GOLD, 8}, {Items.RAW_GOLD_BLOCK, 1}, {Items.IRON_BLOCK, 64},
+                {Items.IRON_INGOT, 64}, {Items.IRON_NUGGET, 64}, {Items.IRON_NUGGET, 64},
+                {Items.IRON_NUGGET, 64}, {Items.IRON_NUGGET, 64}, {Items.RAW_IRON, 64},
+                {Items.RAW_IRON_BLOCK, 1}, {Items.COPPER_INGOT, 64}, {Items.COPPER_INGOT, 64},
+                {Items.COPPER_INGOT, 64}, {Items.RAW_COPPER_BLOCK, 1}, {Items.LAPIS_LAZULI, 64},
+                {Items.AMETHYST_SHARD, 64}, {Items.ENDER_EYE, 64}, {Items.ENDER_PEARL, 16}};
+        // Scattered, the way it was before sorting
+        for (int i = 0; i < contents.length; i++)
+            container.setItem((i * 5) % DOUBLE_CHEST, new ItemStack((Item) contents[i][0], (Integer) contents[i][1]));
+
+        Map<Item, Integer> before = tally(container);
+        ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
+        helper.assertTrue(before.equals(tally(container)), "item counts changed");
+
+        Item[][] expected = {
+                {Items.NETHERITE_BLOCK, Items.DIAMOND_BLOCK, Items.EMERALD, Items.GOLD_INGOT,
+                        Items.IRON_BLOCK, Items.COPPER_INGOT, Items.LAPIS_LAZULI, Items.AMETHYST_SHARD, null},
+                {Items.NETHERITE_INGOT, Items.DIAMOND, null, Items.GOLD_INGOT,
+                        Items.IRON_INGOT, Items.COPPER_INGOT, null, null, null},
+                {Items.NETHERITE_INGOT, null, null, Items.GOLD_INGOT,
+                        Items.IRON_NUGGET, Items.COPPER_INGOT, null, null, null},
+                {Items.NETHERITE_INGOT, null, null, Items.GOLD_NUGGET,
+                        Items.IRON_NUGGET, Items.RAW_COPPER_BLOCK, null, null, null},
+                // Iron is full, so its raw block spills under copper
+                {Items.ANCIENT_DEBRIS, null, null, Items.GOLD_NUGGET,
+                        Items.IRON_NUGGET, Items.RAW_IRON_BLOCK, null, null, null},
+                // The second netherite scrap drops under diamond, the raw gold block under
+                // emerald, the raw iron under copper; the loose items take the last slots
+                {Items.NETHERITE_SCRAP, Items.NETHERITE_SCRAP, Items.RAW_GOLD_BLOCK, Items.RAW_GOLD,
+                        Items.IRON_NUGGET, Items.RAW_IRON, null, Items.ENDER_EYE, Items.ENDER_PEARL}};
+
+        for (int row = 0; row < expected.length; row++)
+            for (int column = 0; column < WIDTH; column++)
+            {
+                if (expected[row][column] == null)
+                    assertEmptyAt(helper, container, row, column);
+                else
+                    assertAt(helper, container, row, column, expected[row][column]);
+            }
+
+        helper.succeed();
+    }
+
+    /** Two sets of the same armor stand side by side instead of the spare pieces going astray. */
+    @GameTest(template = "empty")
+    public static void verticalGivesEachArmorSetItsOwnColumn(GameTestHelper helper)
+    {
+        SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
+        container.setItem(3, new ItemStack(Items.DIAMOND_HELMET));
+        container.setItem(17, new ItemStack(Items.DIAMOND_HELMET));
+        container.setItem(40, new ItemStack(Items.DIAMOND_BOOTS));
+
+        ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
+
+        assertAt(helper, container, 0, 0, Items.DIAMOND_HELMET);
+        assertAt(helper, container, 3, 0, Items.DIAMOND_BOOTS);
+        assertAt(helper, container, 0, 1, Items.DIAMOND_HELMET);
+        assertEmptyAt(helper, container, 3, 1); // the second set has no boots, and keeps that gap
 
         helper.succeed();
     }

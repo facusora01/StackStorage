@@ -26,9 +26,12 @@ public class ContainerSortHandler
      */
     private static final int MIN_VERTICAL_ROWS = 4;
 
-    private static final Comparator<MergedStack> BY_ITEM_ID = Comparator
-            .comparing((MergedStack m) -> ForgeRegistries.ITEMS.getKey(m.prototype.getItem()).toString())
-            .thenComparing(m -> String.valueOf(m.prototype.getTag()))
+    private static final Comparator<ItemStack> BY_ITEM_ID = Comparator
+            .comparing((ItemStack s) -> ForgeRegistries.ITEMS.getKey(s.getItem()).toString())
+            .thenComparing(s -> String.valueOf(s.getTag()));
+
+    private static final Comparator<MergedStack> MERGED_BY_ITEM_ID = Comparator
+            .comparing((MergedStack m) -> m.prototype, BY_ITEM_ID)
             .thenComparing(m -> -m.count);
 
     /**
@@ -65,13 +68,12 @@ public class ContainerSortHandler
         int size = container.getContainerSize();
         ItemStack[] layout = new ItemStack[size];
         boolean[] reserved = new boolean[size];
+        List<MergedStack> merged = collectAndMerge(container);
 
-        List<MergedStack> leftovers = collectAndMerge(container);
-        if (mode == SortMode.VERTICAL && fitsVerticalGrid(size))
-            leftovers = layoutColumns(container, leftovers, layout, reserved);
-
-        leftovers.sort(BY_ITEM_ID);
-        if (!fillFreeSlots(container, layout, reserved, leftovers))
+        boolean placed = mode == SortMode.VERTICAL && fitsVerticalGrid(size)
+                ? arrangeInColumns(container, merged, layout, reserved)
+                : arrangeAlphabetically(container, merged, layout);
+        if (!placed)
             return; // could not place everything; leave the container untouched rather than void items
 
         for (int slot = 0; slot < size; slot++)
@@ -84,123 +86,181 @@ public class ContainerSortHandler
         return size % WIDTH == 0 && size / WIDTH >= MIN_VERTICAL_ROWS;
     }
 
-    /**
-     * Gives every recognised material its own column, one row per tier, and reserves
-     * that band of the grid so the gaps left by missing tiers stay visible.
-     *
-     * @return the stacks that found no column and still need placing
-     */
-    private static List<MergedStack> layoutColumns(Container container, List<MergedStack> merged,
-                                                   ItemStack[] layout, boolean[] reserved)
+    /** Merged stacks by item id, packed from the first slot in reading order. */
+    private static boolean arrangeAlphabetically(Container container, List<MergedStack> merged, ItemStack[] layout)
     {
-        List<MergedStack> leftovers = new ArrayList<>();
-        Map<String, Column> byMaterial = new LinkedHashMap<>();
+        merged.sort(MERGED_BY_ITEM_ID);
+        List<ItemStack> stacks = new ArrayList<>();
+        for (MergedStack entry : merged)
+            stacks.addAll(split(container, entry));
+
+        if (stacks.size() > layout.length)
+            return false;
+        for (int i = 0; i < stacks.size(); i++)
+            layout[i] = stacks.get(i);
+        return true;
+    }
+
+    /**
+     * Gives every recognised material a column, in value order. A mineral fills its
+     * column from the top with every stack it has, heaviest form first and no gaps; what
+     * does not fit spills into the nearest column with room, from the bottom up, so a
+     * material with plenty borrows the space a sparse neighbour leaves. Armor keeps a row
+     * per piece, and the gap where a piece is missing stays empty. Anything that is not a
+     * recognised material goes at the end of the container.
+     */
+    private static boolean arrangeInColumns(Container container, List<MergedStack> merged,
+                                            ItemStack[] layout, boolean[] reserved)
+    {
+        int rows = layout.length / WIDTH;
+        List<MergedStack> unrecognised = new ArrayList<>();
+        Map<String, Group> groups = new LinkedHashMap<>();
 
         for (MergedStack stack : merged)
         {
             ItemFamilies.Family family = ItemFamilies.classify(stack.prototype);
             if (family == null)
-            {
-                leftovers.add(stack);
-                continue;
-            }
-
-            Column column = byMaterial.computeIfAbsent(
-                    family.kind().ordinal() + ":" + family.material(),
-                    key -> new Column(family));
-            // Two different items can claim the same row (a gem and a dust of one
-            // material, say); the first one keeps the row, the rest fall through.
-            if (column.byTier[family.tier()] == null)
-                column.byTier[family.tier()] = stack;
+                unrecognised.add(stack);
             else
-                leftovers.add(stack);
+                groups.computeIfAbsent(family.kind().ordinal() + ":" + family.material(), key -> new Group(family))
+                        .add(family.tier(), split(container, stack));
         }
 
-        if (byMaterial.isEmpty())
-            return leftovers;
-
-        // Every recognised material gets its column, even with a single tier present:
-        // the point of the layout is that a material always sits where you expect it.
-        List<Column> columns = new ArrayList<>(byMaterial.values());
+        List<Column> columns = new ArrayList<>();
+        for (Group group : groups.values())
+            columns.addAll(group.toColumns());
+        // Stable, so several sets of one armor material keep their order side by side
         columns.sort(Comparator.comparing(c -> c.family, ItemFamilies.COLUMN_ORDER));
 
-        int rows = container.getContainerSize() / WIDTH;
-        int placedColumns = Math.min(columns.size(), WIDTH);
-        int band = 0;
+        List<ItemStack> atTheEnd = new ArrayList<>();
+        List<List<ItemStack>> overflow = new ArrayList<>();
 
         for (int c = 0; c < columns.size(); c++)
         {
             Column column = columns.get(c);
-            if (c >= placedColumns)
+            if (c >= WIDTH)
             {
-                // More materials than the grid is wide: the rest join the leftovers
-                for (MergedStack stack : column.byTier)
-                    if (stack != null)
-                        leftovers.add(stack);
+                // More materials than the grid is wide: they go at the end, still grouped
+                atTheEnd.addAll(column.stacks());
                 continue;
             }
 
-            band = Math.max(band, Math.min(column.family.kind().tiers, rows));
-            for (int tier = 0; tier < column.byTier.length; tier++)
+            List<ItemStack> spilled = new ArrayList<>();
+            overflow.add(spilled);
+            if (column.byRow != null)
             {
-                MergedStack stack = column.byTier[tier];
-                if (stack == null)
-                    continue;
-                if (tier >= rows)
+                for (int row = 0; row < column.byRow.length; row++)
                 {
-                    leftovers.add(stack); // tier sits deeper than this container is tall
-                    continue;
+                    int slot = row * WIDTH + c;
+                    if (column.byRow[row] != null)
+                        layout[slot] = column.byRow[row];
+                    else
+                        reserved[slot] = true; // the missing piece keeps its row
                 }
-
-                int maxSize = Math.min(stack.prototype.getMaxStackSize(), container.getMaxStackSize());
-                int chunk = Math.min(maxSize, stack.count);
-                layout[tier * WIDTH + c] = stack.prototype.copyWithCount(chunk);
-                if (stack.count > chunk)
-                    leftovers.add(new MergedStack(stack.prototype, stack.count - chunk));
+            }
+            else
+            {
+                List<ItemStack> stacks = column.inOrder;
+                for (int i = 0; i < stacks.size(); i++)
+                {
+                    if (i < rows)
+                        layout[i * WIDTH + c] = stacks.get(i);
+                    else
+                        spilled.add(stacks.get(i));
+                }
             }
         }
 
-        for (int row = 0; row < band; row++)
-            for (int c = 0; c < placedColumns; c++)
-                reserved[row * WIDTH + c] = true;
+        // Only once every column has its own stacks, so a spill never takes a slot the
+        // neighbour's own material needed
+        for (int c = 0; c < overflow.size(); c++)
+        {
+            for (ItemStack stack : overflow.get(c))
+            {
+                int slot = nearestFreeBelow(layout, reserved, rows, c);
+                if (slot < 0)
+                    atTheEnd.add(stack);
+                else
+                    layout[slot] = stack;
+            }
+        }
 
-        return leftovers;
+        unrecognised.sort(MERGED_BY_ITEM_ID);
+        for (MergedStack stack : unrecognised)
+            atTheEnd.addAll(split(container, stack));
+
+        return fillFromTheEnd(layout, reserved, atTheEnd);
     }
 
     /**
-     * Fills the stacks that are not part of a column into the free slots, in reading
-     * order. Reserved gaps are skipped on the first pass and only used as a last
-     * resort, because keeping the columns aligned is never worth destroying items over.
+     * The closest other column with a free slot, checking one step right then one step
+     * left, then two, and so on; within it, the lowest free slot, so the spill builds up
+     * from the bottom away from whatever the column already holds on top.
      *
-     * @return false if there was not enough room, meaning the sort must be abandoned
+     * @return the slot, or -1 if the grid is full
      */
-    private static boolean fillFreeSlots(Container container, ItemStack[] layout, boolean[] reserved,
-                                         List<MergedStack> leftovers)
+    private static int nearestFreeBelow(ItemStack[] layout, boolean[] reserved, int rows, int column)
     {
-        for (boolean useReserved : new boolean[]{false, true})
+        for (int distance = 1; distance < WIDTH; distance++)
         {
-            int slot = 0;
-            for (MergedStack entry : leftovers)
+            for (int candidate : new int[]{column + distance, column - distance})
             {
-                while (entry.count > 0)
+                if (candidate < 0 || candidate >= WIDTH)
+                    continue;
+                for (int row = rows - 1; row >= 0; row--)
                 {
-                    while (slot < layout.length && (layout[slot] != null || (reserved[slot] && !useReserved)))
-                        slot++;
-                    if (slot >= layout.length)
-                        break;
-
-                    int maxSize = Math.min(entry.prototype.getMaxStackSize(), container.getMaxStackSize());
-                    int chunk = Math.min(maxSize, entry.count);
-                    layout[slot] = entry.prototype.copyWithCount(chunk);
-                    entry.count -= chunk;
+                    int slot = row * WIDTH + candidate;
+                    if (layout[slot] == null && !reserved[slot])
+                        return slot;
                 }
             }
-
-            leftovers.removeIf(entry -> entry.count <= 0);
-            if (leftovers.isEmpty())
-                return true;
         }
-        return leftovers.isEmpty();
+        return -1;
+    }
+
+    /**
+     * Places the stacks in the last free slots of the container, in reading order, so
+     * they sit below and after the columns rather than in among them. Armor gaps are
+     * only given up when there is nowhere else, since keeping them is never worth
+     * destroying items over.
+     *
+     * @return false if even the gaps are not enough, meaning the sort must be abandoned
+     */
+    private static boolean fillFromTheEnd(ItemStack[] layout, boolean[] reserved, List<ItemStack> stacks)
+    {
+        List<Integer> free = new ArrayList<>();
+        List<Integer> gaps = new ArrayList<>();
+        for (int slot = 0; slot < layout.length; slot++)
+        {
+            if (layout[slot] != null)
+                continue;
+            (reserved[slot] ? gaps : free).add(slot);
+        }
+
+        List<Integer> targets;
+        if (stacks.size() <= free.size())
+            targets = free.subList(free.size() - stacks.size(), free.size());
+        else
+        {
+            targets = new ArrayList<>(free);
+            targets.addAll(gaps);
+            if (stacks.size() > targets.size())
+                return false;
+        }
+
+        for (int i = 0; i < stacks.size(); i++)
+            layout[targets.get(i)] = stacks.get(i);
+        return true;
+    }
+
+    /** The merged count cut back into stacks the container accepts, full ones first. */
+    private static List<ItemStack> split(Container container, MergedStack entry)
+    {
+        List<ItemStack> stacks = new ArrayList<>();
+        int maxSize = Math.min(entry.prototype.getMaxStackSize(), container.getMaxStackSize());
+        for (int remaining = entry.count; remaining > 0; remaining -= maxSize)
+            stacks.add(entry.prototype.copyWithCount(Math.min(maxSize, remaining)));
+        return stacks;
     }
 
     private static List<MergedStack> collectAndMerge(Container container)
@@ -229,16 +289,79 @@ public class ContainerSortHandler
         return merged;
     }
 
-    /** One column: the stacks sharing a material, indexed by tier. */
-    private static class Column
+    /** Every stack of one material, filed by tier. */
+    private static class Group
     {
         final ItemFamilies.Family family;
-        final MergedStack[] byTier;
+        final List<List<ItemStack>> byTier = new ArrayList<>();
 
-        Column(ItemFamilies.Family family)
+        Group(ItemFamilies.Family family)
         {
             this.family = family;
-            this.byTier = new MergedStack[family.kind().tiers];
+            for (int tier = 0; tier < family.kind().tiers; tier++)
+                byTier.add(new ArrayList<>());
+        }
+
+        void add(int tier, List<ItemStack> stacks)
+        {
+            byTier.get(tier).addAll(stacks);
+        }
+
+        /**
+         * A mineral is one column of everything it has. Armor is one column per set:
+         * the first of each piece forms the first set, the second of each the next, and
+         * so on, so two diamond sets stand side by side.
+         */
+        List<Column> toColumns()
+        {
+            List<Column> columns = new ArrayList<>();
+            if (family.kind() == ItemFamilies.Kind.ARMOR)
+            {
+                int sets = 0;
+                for (List<ItemStack> pieces : byTier)
+                {
+                    pieces.sort(BY_ITEM_ID);
+                    sets = Math.max(sets, pieces.size());
+                }
+                for (int set = 0; set < sets; set++)
+                {
+                    ItemStack[] byRow = new ItemStack[byTier.size()];
+                    for (int tier = 0; tier < byTier.size(); tier++)
+                        if (set < byTier.get(tier).size())
+                            byRow[tier] = byTier.get(tier).get(set);
+                    columns.add(new Column(family, byRow, null));
+                }
+            }
+            else
+            {
+                List<ItemStack> inOrder = new ArrayList<>();
+                for (List<ItemStack> tier : byTier)
+                {
+                    // Same item stays together, full stacks before the partial one
+                    tier.sort(BY_ITEM_ID.thenComparing(s -> -s.getCount()));
+                    inOrder.addAll(tier);
+                }
+                columns.add(new Column(family, null, inOrder));
+            }
+            return columns;
+        }
+    }
+
+    /**
+     * One column of the layout: either a fixed row per piece ({@code byRow}, armor) or
+     * a run of stacks laid top down ({@code inOrder}, minerals).
+     */
+    private record Column(ItemFamilies.Family family, ItemStack[] byRow, List<ItemStack> inOrder)
+    {
+        List<ItemStack> stacks()
+        {
+            if (inOrder != null)
+                return inOrder;
+            List<ItemStack> pieces = new ArrayList<>();
+            for (ItemStack piece : byRow)
+                if (piece != null)
+                    pieces.add(piece);
+            return pieces;
         }
     }
 

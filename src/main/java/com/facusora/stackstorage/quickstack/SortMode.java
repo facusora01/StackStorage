@@ -9,10 +9,11 @@ public enum SortMode
     /** Merge partial stacks and lay everything out by item id, filling row by row. */
     ALPHABETICAL,
     /**
-     * Give each material family its own column, one row per tier: iron block on top,
-     * then ingot, nugget, raw ore, raw block. Armor sets work the same way with
-     * helmet / chestplate / leggings / boots. Missing pieces leave their row empty so
-     * the columns stay aligned and the gap shows what is missing.
+     * Give each material its own column, in value order, filled from the top with every
+     * stack it has, heaviest form first: iron blocks, then ingots, nuggets, raw ore, raw
+     * blocks. A column that runs out of room spills into the nearest neighbour with
+     * space. Armor sets get a row per piece instead, helmet to boots, and a missing
+     * piece leaves its row empty so the gap shows what is missing.
      */
     VERTICAL;
 
