@@ -1,8 +1,8 @@
 package com.facusora.stackstorage.quickstack;
 
 /**
- * How the sort button arranges a container. The player cycles between modes with
- * a right click; the choice lives on the client and travels with every sort request.
+ * How the sort button arranges a container: left click is alphabetical, right click
+ * is vertical. The client picks it per click and sends it with the sort request.
  */
 public enum SortMode
 {
@@ -17,11 +17,6 @@ public enum SortMode
     VERTICAL;
 
     private static final SortMode[] VALUES = values();
-
-    public SortMode next()
-    {
-        return VALUES[(ordinal() + 1) % VALUES.length];
-    }
 
     public static SortMode byId(int id)
     {

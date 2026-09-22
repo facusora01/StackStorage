@@ -48,7 +48,7 @@ public class ClientEvents
         event.addListener(new SortButton(
                 screen.getGuiLeft() + screen.getXSize() - SortButton.SIZE - 7,
                 screen.getGuiTop() + 4,
-                b -> ModNetworking.CHANNEL.sendToServer(new SortContainerPacket(SortPreferences.current()))));
+                mode -> ModNetworking.CHANNEL.sendToServer(new SortContainerPacket(mode))));
     }
 
     @SubscribeEvent
