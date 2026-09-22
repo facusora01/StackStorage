@@ -11,8 +11,10 @@ public class Config
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
     private static final ForgeConfigSpec.IntValue QUICK_STACK_RADIUS = BUILDER
-            .comment("Radius (in blocks) around the player to search for chests/barrels/shulker boxes when quick stacking")
-            .defineInRange("quickStackRadius", 5, 1, 64);
+            .comment("How far (in blocks) quick stack reaches for chests/barrels/shulker boxes, measured along the way",
+                    "round through open space: walls, floors and closed doors have to be gone around, not through.",
+                    "Capped at 16 because the search visits every open block within this distance.")
+            .defineInRange("quickStackRadius", 5, 1, 16);
 
     static final ForgeConfigSpec SPEC = BUILDER.build();
 

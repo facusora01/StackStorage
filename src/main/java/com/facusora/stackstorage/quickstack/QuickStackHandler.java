@@ -25,6 +25,7 @@ import net.minecraftforge.network.PacketDistributor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class QuickStackHandler
@@ -57,7 +58,7 @@ public class QuickStackHandler
             return;
 
         // Closest containers absorb items first
-        containers.sort((a, b) -> Double.compare(a.distSqr, b.distSqr));
+        containers.sort((a, b) -> Double.compare(a.distance, b.distance));
 
         List<QuickStackAnimationPacket.Transfer> transfers = new ArrayList<>();
         List<ItemStack> playerItems = player.getInventory().items; // 36 slots: main + hotbar
@@ -110,9 +111,9 @@ public class QuickStackHandler
     }
 
     /**
-     * Quick stacking scans the block entities of every chunk in range, so a client
-     * holding the button down would have the server sweeping them every tick and the
-     * whole area watching items fly non stop.
+     * Quick stacking scans the block entities of every chunk in range and floods the
+     * open space around the player, so a client holding the button down would have the
+     * server doing both every tick and the whole area watching items fly non stop.
      */
     private static boolean isOnCooldown(ServerPlayer player)
     {
@@ -129,16 +130,20 @@ public class QuickStackHandler
     }
 
     /**
-     * Collects valid containers by iterating block entities of the chunks in range
-     * instead of scanning every block position: a 64-block radius touches ~81 chunk
-     * lookups rather than millions of block reads, so a hostile client spamming the
-     * packet cannot stall the server.
+     * Collects the containers the player can get to within {@code radius} blocks of
+     * open space. Candidates come from the block entities of the chunks in range rather
+     * than from scanning every block, then one flood from the player measures the real
+     * way round to each of them, so a chest behind a wall or under the floor is as far
+     * as the route to it rather than as far as it looks.
      */
     private static List<ContainerEntry> findNearbyContainers(ServerLevel level, ServerPlayer player, int radius)
     {
-        List<ContainerEntry> containers = new ArrayList<>();
+        List<Candidate> candidates = new ArrayList<>();
         Set<BlockPos> visited = new HashSet<>();
-        double radiusSqr = radius * radius;
+        // A route through open space is never shorter than the straight line, so anything
+        // out of reach as the crow flies is out of reach on foot too. The extra block
+        // covers the player standing off the centre of the cell the flood starts from.
+        double reachSqr = (radius + 1.0) * (radius + 1.0);
         BlockPos origin = player.blockPosition();
 
         int minChunkX = (origin.getX() - radius) >> 4;
@@ -159,13 +164,12 @@ public class QuickStackHandler
                     BlockPos pos = blockEntity.getBlockPos();
                     if (blockEntity.isRemoved() || visited.contains(pos))
                         continue;
-
-                    double distSqr = pos.distToCenterSqr(player.getX(), player.getY(), player.getZ());
-                    if (distSqr > radiusSqr)
+                    if (pos.distToCenterSqr(player.getX(), player.getY(), player.getZ()) > reachSqr)
                         continue;
 
                     BlockState state = blockEntity.getBlockState();
                     Container container = null;
+                    List<BlockPos> cells = List.of(pos);
 
                     if (state.getBlock() instanceof ChestBlock chestBlock)
                     {
@@ -173,7 +177,11 @@ public class QuickStackHandler
                         container = ChestBlock.getContainer(chestBlock, state, level, pos, false);
                         visited.add(pos);
                         if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE)
-                            visited.add(pos.relative(ChestBlock.getConnectedDirection(state)));
+                        {
+                            BlockPos other = pos.relative(ChestBlock.getConnectedDirection(state));
+                            visited.add(other);
+                            cells = List.of(pos, other); // reaching either half reaches the chest
+                        }
                     }
                     else if (state.getBlock() instanceof BarrelBlock || state.getBlock() instanceof ShulkerBoxBlock)
                     {
@@ -182,9 +190,37 @@ public class QuickStackHandler
                     }
 
                     if (container != null)
-                        containers.add(new ContainerEntry(container, pos, distSqr));
+                        candidates.add(new Candidate(container, cells));
                 }
             }
+        }
+
+        if (candidates.isEmpty())
+            return List.of();
+
+        Set<BlockPos> goals = new HashSet<>();
+        for (Candidate candidate : candidates)
+            goals.addAll(candidate.cells());
+
+        Map<BlockPos, Double> distances = PathDistance.measure(
+                level, List.of(origin, origin.above()), goals, radius);
+
+        List<ContainerEntry> containers = new ArrayList<>();
+        for (Candidate candidate : candidates)
+        {
+            BlockPos nearest = null;
+            double distance = Double.POSITIVE_INFINITY;
+            for (BlockPos cell : candidate.cells())
+            {
+                Double d = distances.get(cell);
+                if (d != null && d < distance)
+                {
+                    distance = d;
+                    nearest = cell;
+                }
+            }
+            if (nearest != null)
+                containers.add(new ContainerEntry(candidate.container(), nearest, distance));
         }
         return containers;
     }
@@ -238,19 +274,25 @@ public class QuickStackHandler
         return moved;
     }
 
+    /** A container in range, with every cell it occupies (both halves of a double chest). */
+    private record Candidate(Container container, List<BlockPos> cells)
+    {
+    }
+
     private static class ContainerEntry
     {
         final Container container;
-        /** Where the items should fly to; for a double chest, the half we found first. */
+        /** Where the items fly to: the cell the route reached, so the nearer half of a double chest. */
         final BlockPos pos;
-        final double distSqr;
+        /** Length of the route to it through open space. */
+        final double distance;
         boolean dirty = false;
 
-        ContainerEntry(Container container, BlockPos pos, double distSqr)
+        ContainerEntry(Container container, BlockPos pos, double distance)
         {
             this.container = container;
             this.pos = pos;
-            this.distSqr = distSqr;
+            this.distance = distance;
         }
     }
 }
