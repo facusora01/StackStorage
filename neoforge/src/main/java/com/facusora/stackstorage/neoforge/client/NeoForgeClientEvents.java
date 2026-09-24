@@ -8,14 +8,14 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ContainerScreenEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
-import net.neoforged.neoforge.event.TickEvent;
 import org.lwjgl.glfw.GLFW;
 
 /** Hands NeoForge's client events to the shared client code. */
@@ -28,7 +28,7 @@ public class NeoForgeClientEvents
             GLFW.GLFW_KEY_LEFT_ALT,
             "key.categories.stackstorage");
 
-    @Mod.EventBusSubscriber(modid = StackStorage.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = StackStorage.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ModBus
     {
         @SubscribeEvent
@@ -38,7 +38,7 @@ public class NeoForgeClientEvents
         }
     }
 
-    @Mod.EventBusSubscriber(modid = StackStorage.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = StackStorage.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
     public static class GameBus
     {
         @SubscribeEvent
@@ -63,10 +63,9 @@ public class NeoForgeClientEvents
         }
 
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event)
+        public static void onClientTick(ClientTickEvent.Post event)
         {
-            if (event.phase == TickEvent.Phase.END)
-                QuickStackAnimations.tick();
+            QuickStackAnimations.tick();
         }
 
         @SubscribeEvent

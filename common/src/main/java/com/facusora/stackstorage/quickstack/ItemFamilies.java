@@ -10,13 +10,16 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Works out which vertical column an item belongs to and which row of that column
  * it sits in.
  *
- * Minerals are resolved from Forge's common tags rather than a hardcoded item list,
- * so modded ores that follow the convention line up next to the vanilla ones for free.
+ * Minerals are resolved from the loaders' common tags rather than a hardcoded item
+ * list, so modded ores that follow the convention line up next to the vanilla ones for
+ * free. NeoForge moved those tags from {@code forge:} to {@code c:} in 1.20.5, so both
+ * namespaces are read.
  * Armor is resolved from {@link ArmorItem} itself, so any mod's set works too.
  */
 public final class ItemFamilies
@@ -41,9 +44,9 @@ public final class ItemFamilies
     {
     }
 
-    private static final String FORGE = "forge";
+    private static final Set<String> COMMON_TAG_NAMESPACES = Set.of("c", "forge");
 
-    /** forge tag prefix -> row of the mineral column. Ordered heaviest (most compressed) first. */
+    /** common tag prefix -> row of the mineral column. Ordered heaviest (most compressed) first. */
     private static final Map<String, Integer> MINERAL_TIER_BY_TAG = Map.of(
             "storage_blocks", 0,
             "ingots", 1,
@@ -52,12 +55,12 @@ public final class ItemFamilies
             "nuggets", 2,
             "raw_materials", 3);
 
-    /** Row for {@code forge:storage_blocks/raw_<material>}: the bottom of the column. */
+    /** Row for {@code c:storage_blocks/raw_<material>}: the bottom of the column. */
     private static final int RAW_BLOCK_TIER = 4;
     private static final String RAW_PREFIX = "raw_";
 
     /**
-     * Vanilla items that belong to a material but carry no Forge family tag, so they
+     * Vanilla items that belong to a material but carry no common family tag, so they
      * would otherwise never find their own column. Charcoal rides just under coal, and
      * netherite fills its two empty rows with the forms it actually has: ancient debris
      * where the nugget would go, then the scrap it smelts into.
@@ -93,10 +96,18 @@ public final class ItemFamilies
     public static Family classify(ItemStack stack)
     {
         if (stack.getItem() instanceof ArmorItem armor)
-            return new Family(Kind.ARMOR, armor.getMaterial().getName(), armor.getType().ordinal());
+            return new Family(Kind.ARMOR, materialName(armor), armor.getType().ordinal());
 
         Family tagged = classifyMineral(stack);
         return tagged != null ? tagged : UNTAGGED.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+    }
+
+    /** Armor materials became registry entries in 1.20.5; the id path is the old name. */
+    private static String materialName(ArmorItem armor)
+    {
+        return armor.getMaterial().unwrapKey()
+                .map(key -> key.location().getPath())
+                .orElse("unknown");
     }
 
     private static Family classifyMineral(ItemStack stack)
@@ -107,13 +118,13 @@ public final class ItemFamilies
         for (TagKey<Item> tag : stack.getTags().toList())
         {
             ResourceLocation id = tag.location();
-            if (!FORGE.equals(id.getNamespace()))
+            if (!COMMON_TAG_NAMESPACES.contains(id.getNamespace()))
                 continue;
 
             String path = id.getPath();
             int slash = path.indexOf('/');
             if (slash < 0)
-                continue; // umbrella tag such as forge:ingots, carries no material
+                continue; // umbrella tag such as c:ingots, carries no material
 
             String prefix = path.substring(0, slash);
             String material = path.substring(slash + 1);
@@ -121,7 +132,7 @@ public final class ItemFamilies
             if (tier == null)
                 continue;
 
-            // forge:storage_blocks/raw_iron is the raw ore block, not the iron block
+            // c:storage_blocks/raw_iron is the raw ore block, not the iron block
             if (tier == 0 && material.startsWith(RAW_PREFIX))
             {
                 material = material.substring(RAW_PREFIX.length());

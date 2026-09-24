@@ -28,20 +28,19 @@ public class NeoForgePlatform implements Platform
     @Override
     public void sendToServer(QuickStackPacket packet)
     {
-        PacketDistributor.SERVER.noArg().send(new NeoForgeNetworking.QuickStack(packet));
+        PacketDistributor.sendToServer(new NeoForgeNetworking.QuickStack(packet));
     }
 
     @Override
     public void sendToServer(SortContainerPacket packet)
     {
-        PacketDistributor.SERVER.noArg().send(new NeoForgeNetworking.Sort(packet));
+        PacketDistributor.sendToServer(new NeoForgeNetworking.Sort(packet));
     }
 
     @Override
     public void sendToPlayersNear(ServerLevel level, Vec3 center, double radius, QuickStackAnimationPacket packet)
     {
-        PacketDistributor.NEAR.with(new PacketDistributor.TargetPoint(
-                        center.x, center.y, center.z, radius, level.dimension()))
-                .send(new NeoForgeNetworking.Animation(packet));
+        PacketDistributor.sendToPlayersNear(level, null, center.x, center.y, center.z, radius,
+                new NeoForgeNetworking.Animation(packet));
     }
 }

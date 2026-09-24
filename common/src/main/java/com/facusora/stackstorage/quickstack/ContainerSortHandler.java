@@ -28,7 +28,7 @@ public class ContainerSortHandler
 
     private static final Comparator<ItemStack> BY_ITEM_ID = Comparator
             .comparing((ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString())
-            .thenComparing(s -> String.valueOf(s.getTag()));
+            .thenComparing(s -> s.getComponentsPatch().toString());
 
     private static final Comparator<MergedStack> MERGED_BY_ITEM_ID = Comparator
             .comparing((MergedStack m) -> m.prototype, BY_ITEM_ID)
@@ -275,7 +275,7 @@ public class ContainerSortHandler
             MergedStack match = null;
             for (MergedStack candidate : merged)
             {
-                if (ItemStack.isSameItemSameTags(candidate.prototype, stack))
+                if (ItemStack.isSameItemSameComponents(candidate.prototype, stack))
                 {
                     match = candidate;
                     break;

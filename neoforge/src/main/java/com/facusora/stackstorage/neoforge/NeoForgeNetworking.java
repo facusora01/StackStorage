@@ -5,12 +5,13 @@ import com.facusora.stackstorage.network.QuickStackAnimationPacket;
 import com.facusora.stackstorage.network.QuickStackPacket;
 import com.facusora.stackstorage.network.SortContainerPacket;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
-import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 import java.util.function.BiConsumer;
 
@@ -24,74 +25,64 @@ public class NeoForgeNetworking
 
     public record QuickStack(QuickStackPacket packet) implements CustomPacketPayload
     {
-        static final ResourceLocation ID = new ResourceLocation(StackStorage.MODID, "quick_stack");
+        static final Type<QuickStack> TYPE = new Type<>(new ResourceLocation(StackStorage.MODID, "quick_stack"));
+        static final StreamCodec<FriendlyByteBuf, QuickStack> CODEC = StreamCodec.of(
+                (buf, payload) -> QuickStackPacket.encode(payload.packet(), buf),
+                buf -> new QuickStack(QuickStackPacket.decode(buf)));
 
         @Override
-        public void write(FriendlyByteBuf buf)
+        public Type<QuickStack> type()
         {
-            QuickStackPacket.encode(packet, buf);
-        }
-
-        @Override
-        public ResourceLocation id()
-        {
-            return ID;
+            return TYPE;
         }
     }
 
     public record Sort(SortContainerPacket packet) implements CustomPacketPayload
     {
-        static final ResourceLocation ID = new ResourceLocation(StackStorage.MODID, "sort_container");
+        static final Type<Sort> TYPE = new Type<>(new ResourceLocation(StackStorage.MODID, "sort_container"));
+        static final StreamCodec<FriendlyByteBuf, Sort> CODEC = StreamCodec.of(
+                (buf, payload) -> SortContainerPacket.encode(payload.packet(), buf),
+                buf -> new Sort(SortContainerPacket.decode(buf)));
 
         @Override
-        public void write(FriendlyByteBuf buf)
+        public Type<Sort> type()
         {
-            SortContainerPacket.encode(packet, buf);
-        }
-
-        @Override
-        public ResourceLocation id()
-        {
-            return ID;
+            return TYPE;
         }
     }
 
     public record Animation(QuickStackAnimationPacket packet) implements CustomPacketPayload
     {
-        static final ResourceLocation ID = new ResourceLocation(StackStorage.MODID, "quick_stack_animation");
+        static final Type<Animation> TYPE = new Type<>(new ResourceLocation(StackStorage.MODID, "quick_stack_animation"));
+        static final StreamCodec<FriendlyByteBuf, Animation> CODEC = StreamCodec.of(
+                (buf, payload) -> QuickStackAnimationPacket.encode(payload.packet(), buf),
+                buf -> new Animation(QuickStackAnimationPacket.decode(buf)));
 
         @Override
-        public void write(FriendlyByteBuf buf)
+        public Type<Animation> type()
         {
-            QuickStackAnimationPacket.encode(packet, buf);
-        }
-
-        @Override
-        public ResourceLocation id()
-        {
-            return ID;
+            return TYPE;
         }
     }
 
-    static void register(RegisterPayloadHandlerEvent event)
+    static void register(RegisterPayloadHandlersEvent event)
     {
-        IPayloadRegistrar registrar = event.registrar(StackStorage.MODID).versioned(PROTOCOL_VERSION);
-        registrar.play(QuickStack.ID, buf -> new QuickStack(QuickStackPacket.decode(buf)),
-                handler -> handler.server(onServer((payload, player) -> payload.packet().handle(player))));
-        registrar.play(Sort.ID, buf -> new Sort(SortContainerPacket.decode(buf)),
-                handler -> handler.server(onServer((payload, player) -> payload.packet().handle(player))));
-        registrar.play(Animation.ID, buf -> new Animation(QuickStackAnimationPacket.decode(buf)),
+        PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
+        registrar.playToServer(QuickStack.TYPE, QuickStack.CODEC,
+                onServer((payload, player) -> payload.packet().handle(player)));
+        registrar.playToServer(Sort.TYPE, Sort.CODEC,
+                onServer((payload, player) -> payload.packet().handle(player)));
+        registrar.playToClient(Animation.TYPE, Animation.CODEC,
                 // The call sits inside a lambda so the server never loads the client-only class
-                handler -> handler.client((payload, ctx) -> ctx.workHandler().execute(
-                        () -> com.facusora.stackstorage.client.QuickStackAnimations.play(payload.packet()))));
+                (payload, ctx) -> ctx.enqueueWork(
+                        () -> com.facusora.stackstorage.client.QuickStackAnimations.play(payload.packet())));
     }
 
     /** Runs a client -> server payload on the server thread, for the player who sent it. */
-    private static <T extends CustomPacketPayload> net.neoforged.neoforge.network.handling.IPlayPayloadHandler<T> onServer(
-            BiConsumer<T, ServerPlayer> handler)
+    private static <T extends CustomPacketPayload> IPayloadHandler<T> onServer(BiConsumer<T, ServerPlayer> handler)
     {
-        return (payload, ctx) -> ctx.workHandler().execute(() -> {
-            if (ctx.player().orElse(null) instanceof ServerPlayer player)
+        return (payload, ctx) -> ctx.enqueueWork(() -> {
+            if (ctx.player() instanceof ServerPlayer player)
                 handler.accept(payload, player);
         });
     }

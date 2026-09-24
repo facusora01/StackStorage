@@ -238,7 +238,7 @@ public class QuickStackHandler
         for (int slot = 0; slot < size && !stack.isEmpty(); slot++)
         {
             ItemStack target = container.getItem(slot);
-            if (target.isEmpty() || !ItemStack.isSameItemSameTags(target, stack))
+            if (target.isEmpty() || !ItemStack.isSameItemSameComponents(target, stack))
                 continue;
             containsType = true;
             if (!container.canPlaceItem(slot, stack))
