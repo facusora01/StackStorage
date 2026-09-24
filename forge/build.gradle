@@ -19,6 +19,13 @@ sourceSets.main {
     resources.srcDir rootProject.file('common/src/main/resources')
 }
 
+// Forge 49 loads the dev mod as one module, so classes and resources must share a folder.
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
+}
+
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -220,10 +227,10 @@ modrinth {
     token = System.getenv('MODRINTH_TOKEN')
     projectId = 'stack-storage'
     versionNumber = mod_version
-    versionName = "StackStorage ${mod_version} for Forge 1.20.1"
+    versionName = "StackStorage ${mod_version} for Forge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['1.20.1']
+    gameVersions = ['1.20.2', '1.20.3', '1.20.4']
     loaders = ['forge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }

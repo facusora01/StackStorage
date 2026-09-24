@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import java.util.Set;
  * is over the top, which is always longer than the five block radius.
  */
 @GameTestHolder(StackStorage.MODID)
-@PrefixGameTestTemplate(false)
 public class PathDistanceGameTests
 {
     private static final int RADIUS = 5;
@@ -34,7 +32,7 @@ public class PathDistanceGameTests
     private static final BlockPos START = new BlockPos(1, 1, 5);
 
     /** Across open floor the distance is the straight line. */
-    @GameTest(template = "open_room")
+    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void openSpaceMatchesStraightLine(GameTestHelper helper)
     {
         BlockPos goal = new BlockPos(4, 1, 5);
@@ -46,7 +44,7 @@ public class PathDistanceGameTests
     }
 
     /** A chest three blocks away through a wall is out of reach; the detour is far longer. */
-    @GameTest(template = "open_room")
+    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void wallPutsContainerOutOfReach(GameTestHelper helper)
     {
         wallAt(helper, 2);
@@ -62,7 +60,7 @@ public class PathDistanceGameTests
     }
 
     /** A doorway in the wall only counts while the door is open. */
-    @GameTest(template = "open_room")
+    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void closedDoorBlocksOpenDoorPasses(GameTestHelper helper)
     {
         wallAt(helper, 3);
@@ -80,7 +78,7 @@ public class PathDistanceGameTests
     }
 
     /** Two blocks meeting at an edge cannot be squeezed between diagonally. */
-    @GameTest(template = "open_room")
+    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void diagonalCannotCutACorner(GameTestHelper helper)
     {
         BlockPos start = new BlockPos(4, 1, 4);

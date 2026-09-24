@@ -10,7 +10,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +19,6 @@ import java.util.Map;
  * placed chest, but they need a live server so Forge's material tags are bound.
  */
 @GameTestHolder(StackStorage.MODID)
-@PrefixGameTestTemplate(false)
 public class SortGameTests
 {
     private static final int DOUBLE_CHEST = 54;
@@ -28,7 +26,7 @@ public class SortGameTests
     private static final int WIDTH = 9;
 
     /** A double chest gets one column per material, one row per tier, gaps and all. */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalBuildsColumns(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -74,7 +72,7 @@ public class SortGameTests
      * A material with a single tier present still gets its own column, in its place in
      * the value order, rather than being dumped in with the unrecognised items.
      */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalOrdersSingleTierMinerals(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -100,7 +98,7 @@ public class SortGameTests
      * Pins the mineral column order, and the items that carry no Forge family tag:
      * charcoal rides under coal, and netherite runs block, ingot, debris, scrap.
      */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalUsesTheMineralValueOrder(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -142,7 +140,7 @@ public class SortGameTests
      * have produced. Every stack of a material stays in its column with no rows held
      * back, and a full column spills into the nearest neighbour with room, bottom up.
      */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalSpillsFullColumnsIntoNeighbours(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -196,7 +194,7 @@ public class SortGameTests
     }
 
     /** Two sets of the same armor stand side by side instead of the spare pieces going astray. */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalGivesEachArmorSetItsOwnColumn(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -215,7 +213,7 @@ public class SortGameTests
     }
 
     /** Three rows cannot hold a full armor set, so those containers stay alphabetical. */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalFallsBackOnShortContainer(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(SINGLE_CHEST);
@@ -238,7 +236,7 @@ public class SortGameTests
      * When the leftovers outgrow the free slots, the reserved gaps get used rather than
      * items getting dropped. A nearly full chest with one armor column forces that path.
      */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalNeverLosesItems(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -260,7 +258,7 @@ public class SortGameTests
     }
 
     /** Alphabetical mode still merges partial stacks and packs them from the top. */
-    @GameTest(template = "empty")
+    @GameTest(template = StackStorage.MODID + ":empty")
     public static void alphabeticalMergesStacks(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);

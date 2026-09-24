@@ -1,0 +1,76 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.147'
+    id 'com.modrinth.minotaur' version '2.+'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-neoforge-${minecraft_version}"
+}
+
+// The loader-independent code lives in ../common and is compiled straight into this jar.
+sourceSets.main {
+    java.srcDir rootProject.file('common/src/main/java')
+    resources.srcDir rootProject.file('common/src/main/resources')
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+neoForge {
+    version = neo_version
+
+    runs {
+        configureEach {
+            gameDirectory = project.file('run')
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version, minecraft_version_range: neo_minecraft_version_range,
+            neo_version: neo_version, neo_version_range: neo_version_range,
+            neo_loader_version_range: neo_loader_version_range,
+            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors: mod_authors, mod_description: mod_description,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/mods.toml', 'META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// Publish to Modrinth with: ./gradlew :neoforge:modrinth (see forge/build.gradle)
+modrinth {
+    token = System.getenv('MODRINTH_TOKEN')
+    projectId = 'stack-storage'
+    versionNumber = mod_version
+    versionName = "StackStorage ${mod_version} for NeoForge ${minecraft_version}"
+    versionType = 'release'
+    uploadFile = jar
+    gameVersions = ['1.20.4']
+    loaders = ['neoforge']
+    changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
+}

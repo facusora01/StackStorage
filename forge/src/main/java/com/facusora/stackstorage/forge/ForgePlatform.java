@@ -29,21 +29,20 @@ public class ForgePlatform implements Platform
     @Override
     public void sendToServer(QuickStackPacket packet)
     {
-        ForgeNetworking.CHANNEL.sendToServer(packet);
+        ForgeNetworking.CHANNEL.send(packet, PacketDistributor.SERVER.noArg());
     }
 
     @Override
     public void sendToServer(SortContainerPacket packet)
     {
-        ForgeNetworking.CHANNEL.sendToServer(packet);
+        ForgeNetworking.CHANNEL.send(packet, PacketDistributor.SERVER.noArg());
     }
 
     @Override
     public void sendToPlayersNear(ServerLevel level, Vec3 center, double radius, QuickStackAnimationPacket packet)
     {
-        ForgeNetworking.CHANNEL.send(
-                PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
-                        center.x, center.y, center.z, radius, level.dimension())),
-                packet);
+        ForgeNetworking.CHANNEL.send(packet,
+                PacketDistributor.NEAR.with(new PacketDistributor.TargetPoint(
+                        center.x, center.y, center.z, radius, level.dimension())));
     }
 }
