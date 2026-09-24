@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 public final class ClientHooks
 {
     private static final ResourceLocation LOCK_STAR =
-            new ResourceLocation(StackStorage.MODID, "textures/gui/lock_star.png");
+            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/lock_star.png");
 
     private ClientHooks()
     {

@@ -72,7 +72,8 @@ public class NeoForgeClientEvents
         public static void onRenderLevel(RenderLevelStageEvent event)
         {
             if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES)
-                QuickStackAnimations.render(event.getPoseStack(), event.getCamera().getPosition(), event.getPartialTick());
+                QuickStackAnimations.render(event.getPoseStack(), event.getCamera().getPosition(),
+                        event.getPartialTick().getGameTimeDeltaPartialTick(false));
         }
 
         @SubscribeEvent

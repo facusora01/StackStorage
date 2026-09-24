@@ -20,7 +20,7 @@ public class ForgeNetworking
     private static final int PROTOCOL_VERSION = 1;
 
     public static final SimpleChannel CHANNEL = ChannelBuilder
-            .named(new ResourceLocation(StackStorage.MODID, "main"))
+            .named(ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "main"))
             .networkProtocolVersion(PROTOCOL_VERSION)
             .simpleChannel();
 

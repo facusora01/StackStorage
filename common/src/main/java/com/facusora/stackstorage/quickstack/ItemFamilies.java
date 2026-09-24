@@ -66,10 +66,10 @@ public final class ItemFamilies
      * where the nugget would go, then the scrap it smelts into.
      */
     private static final Map<ResourceLocation, Family> UNTAGGED = Map.of(
-            new ResourceLocation("minecraft", "coal"), new Family(Kind.MINERAL, "coal", 1),
-            new ResourceLocation("minecraft", "charcoal"), new Family(Kind.MINERAL, "coal", 2),
-            new ResourceLocation("minecraft", "ancient_debris"), new Family(Kind.MINERAL, "netherite", 2),
-            new ResourceLocation("minecraft", "netherite_scrap"), new Family(Kind.MINERAL, "netherite", 3));
+            ResourceLocation.withDefaultNamespace("coal"), new Family(Kind.MINERAL, "coal", 1),
+            ResourceLocation.withDefaultNamespace("charcoal"), new Family(Kind.MINERAL, "coal", 2),
+            ResourceLocation.withDefaultNamespace("ancient_debris"), new Family(Kind.MINERAL, "netherite", 2),
+            ResourceLocation.withDefaultNamespace("netherite_scrap"), new Family(Kind.MINERAL, "netherite", 3));
 
     /** Column order, most valuable first. Materials missing here sort alphabetically after these. */
     private static final List<String> MINERAL_ORDER = List.of(

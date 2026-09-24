@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 public class SortButton extends Button
 {
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(StackStorage.MODID, "textures/gui/sort_button.png");
+            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/sort_button.png");
     public static final int SIZE = 12;
 
     private static final int RIGHT_BUTTON = 1;

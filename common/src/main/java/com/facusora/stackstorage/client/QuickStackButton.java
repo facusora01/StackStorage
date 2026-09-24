@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 public class QuickStackButton extends Button
 {
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(StackStorage.MODID, "textures/gui/quick_stack_button.png");
+            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/quick_stack_button.png");
     // Texture is authored at 2x the logical size for crispness at higher GUI scales
     private static final int TEX_WIDTH = 40;
     private static final int TEX_HEIGHT = 72;
