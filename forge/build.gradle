@@ -101,6 +101,8 @@ minecraft {
         client {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', mod_id
+            // The jar lists its mixins in the manifest; a dev run reads classes from folders
+            args '-mixin.config=stackstorage.mixins.json'
         }
 
         server {
@@ -194,7 +196,8 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'MixinConfigs'            : 'stackstorage.mixins.json'
         ])
     }
 
@@ -234,7 +237,7 @@ modrinth {
     versionName = "StackStorage ${mod_version} for Forge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['1.21', '1.21.1']
+    gameVersions = ['1.21.3', '1.21.4']
     loaders = ['forge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }

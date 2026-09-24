@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -78,7 +79,7 @@ public final class ClientHooks
             if (slot.container instanceof Inventory && slot.getContainerSlot() < 36
                     && SlotLocks.isLocked(slot.getItem()))
             {
-                guiGraphics.blit(LOCK_STAR, slot.x - 2, slot.y - 2, 0, 0, 8, 8, 8, 8);
+                guiGraphics.blit(RenderType::guiTextured, LOCK_STAR, slot.x - 2, slot.y - 2, 0, 0, 8, 8, 8, 8);
             }
         }
         guiGraphics.pose().popPose();

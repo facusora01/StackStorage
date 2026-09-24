@@ -103,9 +103,9 @@ public final class UpdateChecker
                         .withUnderlined(true)
                         .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, DOWNLOAD_URL)));
 
-        player.sendSystemMessage(Component.translatable("chat.stackstorage.update", latestVersion)
+        player.displayClientMessage(Component.translatable("chat.stackstorage.update", latestVersion)
                 .withStyle(ChatFormatting.YELLOW)
                 .append(" ")
-                .append(link));
+                .append(link), false);
     }
 }

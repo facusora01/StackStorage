@@ -2,8 +2,8 @@ package com.facusora.stackstorage.quickstack;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -20,7 +20,8 @@ import java.util.Set;
  * list, so modded ores that follow the convention line up next to the vanilla ones for
  * free. NeoForge moved those tags from {@code forge:} to {@code c:} in 1.20.5, so both
  * namespaces are read.
- * Armor is resolved from {@link ArmorItem} itself, so any mod's set works too.
+ * Armor is resolved from the vanilla armor slot tags, so any mod's set that joins them
+ * works too; its material is read off the item id ({@code diamond_helmet} is diamond).
  */
 public final class ItemFamilies
 {
@@ -76,6 +77,10 @@ public final class ItemFamilies
             "netherite", "diamond", "emerald", "gold", "iron", "copper",
             "redstone", "lapis", "coal", "quartz", "amethyst");
 
+    /** Row order of an armor column, helmet on top. */
+    private static final List<TagKey<Item>> ARMOR_SLOTS = List.of(
+            ItemTags.HEAD_ARMOR, ItemTags.CHEST_ARMOR, ItemTags.LEG_ARMOR, ItemTags.FOOT_ARMOR);
+
     private static final List<String> ARMOR_ORDER = List.of(
             "netherite", "diamond", "iron", "gold", "chainmail", "turtle", "leather");
 
@@ -95,19 +100,30 @@ public final class ItemFamilies
      */
     public static Family classify(ItemStack stack)
     {
-        if (stack.getItem() instanceof ArmorItem armor)
-            return new Family(Kind.ARMOR, materialName(armor), armor.getType().ordinal());
+        int armorTier = armorTier(stack);
+        if (armorTier >= 0)
+            return new Family(Kind.ARMOR, armorMaterial(stack), armorTier);
 
         Family tagged = classifyMineral(stack);
         return tagged != null ? tagged : UNTAGGED.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
     }
 
-    /** Armor materials became registry entries in 1.20.5; the id path is the old name. */
-    private static String materialName(ArmorItem armor)
+    /** Helmet to boots is 0 to 3; -1 for anything that is not armor. */
+    private static int armorTier(ItemStack stack)
     {
-        return armor.getMaterial().unwrapKey()
-                .map(key -> key.location().getPath())
-                .orElse("unknown");
+        for (int tier = 0; tier < ARMOR_SLOTS.size(); tier++)
+            if (stack.is(ARMOR_SLOTS.get(tier)))
+                return tier;
+        return -1;
+    }
+
+    /** The id minus its piece: {@code diamond_helmet} is diamond, {@code golden_boots} is gold. */
+    private static String armorMaterial(ItemStack stack)
+    {
+        String path = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
+        int underscore = path.lastIndexOf('_');
+        String material = underscore > 0 ? path.substring(0, underscore) : path;
+        return material.equals("golden") ? "gold" : material;
     }
 
     private static Family classifyMineral(ItemStack stack)

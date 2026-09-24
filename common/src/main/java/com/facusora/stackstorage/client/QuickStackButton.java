@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -63,6 +64,6 @@ public class QuickStackButton extends Button
         // isHovered only: clicking focuses the widget, which would leave
         // isHoveredOrFocused() (and the hover art) stuck on after the click
         float v = isHovered ? STATE_HEIGHT : 0;
-        guiGraphics.blit(TEXTURE, getX(), getY(), WIDTH, HEIGHT, 0, v, TEX_WIDTH, STATE_HEIGHT, TEX_WIDTH, TEX_HEIGHT);
+        guiGraphics.blit(RenderType::guiTextured, TEXTURE, getX(), getY(), 0, v, WIDTH, HEIGHT, TEX_WIDTH, STATE_HEIGHT, TEX_WIDTH, TEX_HEIGHT);
     }
 }

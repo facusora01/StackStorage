@@ -5,13 +5,11 @@ import com.facusora.stackstorage.client.ClientHooks;
 import com.facusora.stackstorage.client.QuickStackAnimations;
 import com.facusora.stackstorage.client.UpdateChecker;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
@@ -68,15 +66,6 @@ public class ForgeClientEvents
         {
             if (event.phase == TickEvent.Phase.END)
                 QuickStackAnimations.tick();
-        }
-
-        @SubscribeEvent
-        public static void onRenderLevel(RenderLevelStageEvent event)
-        {
-            // Since 1.20.5 the camera rotation already sits on RenderSystem's model-view
-            // stack and entities draw from an empty pose, so this does the same
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES)
-                QuickStackAnimations.render(new PoseStack(), event.getCamera().getPosition(), event.getPartialTick());
         }
 
         @SubscribeEvent
