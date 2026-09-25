@@ -131,7 +131,7 @@ public final class ItemFamilies
         Family best = null;
         // An item can carry several matching tags; the most compressed form wins so the
         // result does not depend on tag iteration order.
-        for (TagKey<Item> tag : stack.getTags().toList())
+        for (TagKey<Item> tag : stack.typeHolder().tags().toList())
         {
             Identifier id = tag.location();
             if (!COMMON_TAG_NAMESPACES.contains(id.getNamespace()))

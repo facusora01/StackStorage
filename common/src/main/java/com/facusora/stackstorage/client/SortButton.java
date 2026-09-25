@@ -3,7 +3,7 @@ package com.facusora.stackstorage.client;
 import com.facusora.stackstorage.StackStorage;
 import com.facusora.stackstorage.quickstack.SortMode;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
@@ -75,7 +75,7 @@ public class SortButton extends Button
     }
 
     @Override
-    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick)
+    protected void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick)
     {
         int v = isHovered ? SIZE : 0;
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, getX(), getY(), 0, v, SIZE, SIZE, SIZE, SIZE * 2);

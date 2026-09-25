@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -27,7 +27,7 @@ import java.util.Map;
  * reacts to what the server reported. Everyone nearby sees it, which matches the
  * sound the quick stack already plays for the whole area.
  *
- * The loader calls {@link #tick}, {@link #clear} and {@link #render} from its own events.
+ * The loader calls {@link #tick}, {@link #clear} and {@link #submit} from its own events.
  */
 public class QuickStackAnimations
 {
@@ -54,8 +54,6 @@ public class QuickStackAnimations
     private static final int NO_OUTLINE = 0;
 
     private static final List<FlyingItem> ACTIVE = new ArrayList<>();
-    /** Rebuilt for each item as it is drawn; rendering is single threaded. */
-    private static final ItemStackRenderState ITEM_STATE = new ItemStackRenderState();
     private static long clientTicks;
 
     public static void play(QuickStackAnimationPacket packet)
@@ -98,8 +96,12 @@ public class QuickStackAnimations
         ACTIVE.clear();
     }
 
-    /** After entities are drawn, with the pose stack still in world space. */
-    public static void render(PoseStack pose, Vec3 camera, float partialTick)
+    /**
+     * Submits the items in flight, with the pose stack in world space. The loader
+     * hands over the collector the level renderer is filling, which draws them with
+     * the rest of the frame.
+     */
+    public static void submit(PoseStack pose, Vec3 camera, float partialTick, SubmitNodeCollector nodes)
     {
         if (ACTIVE.isEmpty())
             return;
@@ -108,9 +110,6 @@ public class QuickStackAnimations
         if (minecraft.level == null)
             return;
 
-        // Since 1.21.9 models are submitted as render states and drawn in one go by
-        // the feature dispatcher, the same pair the level renderer uses for entities
-        SubmitNodeStorage nodes = minecraft.gameRenderer.getSubmitNodeStorage();
         float now = clientTicks + partialTick;
 
         for (FlyingItem item : ACTIVE)
@@ -120,24 +119,28 @@ public class QuickStackAnimations
                 continue; // still waiting its turn, or already landed
 
             Vec3 position = item.positionAt(progress);
-            int light = LevelRenderer.getLightColor(minecraft.level, BlockPos.containing(position));
+            int light = LevelRenderer.getLightCoords(minecraft.level, BlockPos.containing(position));
 
             pose.pushPose();
             pose.translate(position.x - camera.x, position.y - camera.y, position.z - camera.z);
             pose.scale(SCALE, SCALE, SCALE);
             pose.mulPose(Axis.YP.rotationDegrees(now * SPIN_DEGREES_PER_TICK));
-            minecraft.getItemModelResolver().updateForTopItem(ITEM_STATE, item.stack,
+            minecraft.getItemModelResolver().updateForTopItem(item.renderState, item.stack,
                     ItemDisplayContext.GROUND, minecraft.level, null, 0);
-            ITEM_STATE.submit(pose, nodes, light, OverlayTexture.NO_OVERLAY, NO_OUTLINE);
+            item.renderState.submit(pose, nodes, light, OverlayTexture.NO_OVERLAY, NO_OUTLINE);
             pose.popPose();
         }
-
-        minecraft.gameRenderer.getFeatureRenderDispatcher().renderAllFeatures();
     }
 
     private static class FlyingItem
     {
         final ItemStack stack;
+        /**
+         * One per item: a submit holds on to the state's model until the frame's
+         * features are drawn, so sharing one across items would draw them all as the
+         * last one.
+         */
+        final ItemStackRenderState renderState = new ItemStackRenderState();
         final Vec3 origin;
         /** Kept as the block so items heading for one container can share a queue. */
         final BlockPos target;

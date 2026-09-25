@@ -45,7 +45,7 @@ public final class ForgeClientEvents
 
     public static void register(BusGroup modBusGroup)
     {
-        RegisterKeyMappingsEvent.getBus(modBusGroup).addListener(event -> event.register(LOCK_SLOT_KEY));
+        RegisterKeyMappingsEvent.BUS.addListener(event -> event.register(LOCK_SLOT_KEY));
 
         ScreenEvent.Init.Post.BUS.addListener(event ->
                 ClientHooks.onScreenInit(event.getScreen(), event::addListener));

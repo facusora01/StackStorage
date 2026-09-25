@@ -17,7 +17,7 @@ sourceSets.main {
     resources.srcDir rootProject.file('common/src/main/resources')
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
     version = neo_version
@@ -73,7 +73,7 @@ modrinth {
     versionName = "StackStorage ${mod_version} for NeoForge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['1.21.11']
+    gameVersions = ['26.1.2']
     loaders = ['neoforge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }

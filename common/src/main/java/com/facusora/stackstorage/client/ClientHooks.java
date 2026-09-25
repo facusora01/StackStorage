@@ -4,7 +4,7 @@ import com.facusora.stackstorage.StackStorage;
 import com.facusora.stackstorage.network.QuickStackPacket;
 import com.facusora.stackstorage.network.SortContainerPacket;
 import com.facusora.stackstorage.platform.Services;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -70,7 +70,7 @@ public final class ClientHooks
     }
 
     /** Over a container screen's slots, in the menu's own coordinates. */
-    public static void renderLockStars(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics)
+    public static void renderLockStars(AbstractContainerScreen<?> screen, GuiGraphicsExtractor guiGraphics)
     {
         // The GUI draws in layers since 1.21.6: a new stratum puts the stars over
         // the slot items instead of behind them

@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'eclipse'
-    id 'net.minecraftforge.gradle' version '[7.0.3,8)'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8)'
     id 'com.modrinth.minotaur' version '2.+'
 }
 
@@ -19,12 +19,11 @@ sourceSets.main {
     resources.srcDir rootProject.file('common/src/main/resources')
 }
 
-// Minecraft 1.20.5+ runs on Java 21.
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// Minecraft 26.1+ runs on Java 25.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 // Forge 1.21.6+ builds with ForgeGradle 7, which follows the layout of its MDK.
 minecraft {
-    mappings channel: mapping_channel, version: mapping_version
 
     runs {
         configureEach {
@@ -52,7 +51,7 @@ repositories {
 dependencies {
     implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
     // Checks @SubscribeEvent methods against EventBus 7 at compile time
-    annotationProcessor 'net.minecraftforge:eventbus-validator:7.0.1'
+    annotationProcessor 'net.minecraftforge:eventbus-validator:7.0.5'
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -98,7 +97,7 @@ modrinth {
     versionName = "StackStorage ${mod_version} for Forge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['1.21.11']
+    gameVersions = ['26.1', '26.1.1', '26.1.2']
     loaders = ['forge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }

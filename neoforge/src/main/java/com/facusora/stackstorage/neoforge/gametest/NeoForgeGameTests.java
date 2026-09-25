@@ -64,15 +64,15 @@ public final class NeoForgeGameTests
 
     private static void registerTests(RegisterGameTestsEvent event)
     {
-        Holder<TestEnvironmentDefinition> environment = event.registerEnvironment(id("default"));
+        Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(id("default"));
         for (Test test : TESTS)
         {
             event.registerTest(id(test.name()), new FunctionGameTestInstance(
                     ResourceKey.create(Registries.TEST_FUNCTION, id(test.name())),
                     // Sky access: without it the test area gets a barrier ceiling, and the
                     // wall test needs the long way round over the top to exist
-                    new TestData<>(environment, id(test.structure()), MAX_TICKS, 0, true,
-                            Rotation.NONE, false, 1, 1, true)));
+                    new TestData<Holder<TestEnvironmentDefinition<?>>>(environment, id(test.structure()), MAX_TICKS, 0, true,
+                            Rotation.NONE, false, 1, 1, true, 0)));
         }
     }
 

@@ -172,7 +172,7 @@ public final class PathDistance
 
             int x = BlockPos.getX(cell);
             int z = BlockPos.getZ(cell);
-            LevelChunk chunk = chunks.computeIfAbsent(ChunkPos.asLong(x >> 4, z >> 4),
+            LevelChunk chunk = chunks.computeIfAbsent(ChunkPos.pack(x >> 4, z >> 4),
                     key -> level.getChunkSource().getChunkNow(x >> 4, z >> 4));
             if (chunk == null)
                 return false; // unloaded: treat as solid rather than load it

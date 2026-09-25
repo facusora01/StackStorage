@@ -8,7 +8,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.network.CustomPayloadEvent;
-import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.SimpleChannel;
@@ -53,11 +53,10 @@ public class ForgeNetworking
         };
     }
 
-    @SuppressWarnings("removal")
     private static void handleAnimation(QuickStackAnimationPacket packet, CustomPayloadEvent.Context ctx)
     {
-        // Wrapped so the server never loads the client-only animation class
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
-                () -> () -> com.facusora.stackstorage.client.QuickStackAnimations.play(packet));
+        // The client class is only resolved when this line runs, so the server never loads it
+        if (FMLEnvironment.dist == Dist.CLIENT)
+            com.facusora.stackstorage.client.QuickStackAnimations.play(packet);
     }
 }

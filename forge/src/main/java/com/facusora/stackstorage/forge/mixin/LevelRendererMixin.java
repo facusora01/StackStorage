@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,7 +23,7 @@ public abstract class LevelRendererMixin
     private void stackstorage$renderQuickStackItems(PoseStack pose, LevelRenderState state,
             SubmitNodeCollector nodes, CallbackInfo ci)
     {
-        QuickStackAnimations.render(pose, state.cameraRenderState.pos,
-                Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
+        QuickStackAnimations.submit(pose, state.cameraRenderState.pos,
+                Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false), nodes);
     }
 }

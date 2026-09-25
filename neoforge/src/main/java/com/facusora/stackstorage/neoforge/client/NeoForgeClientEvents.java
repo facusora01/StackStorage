@@ -15,8 +15,8 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ContainerScreenEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import org.lwjgl.glfw.GLFW;
 
@@ -76,10 +76,11 @@ public class NeoForgeClientEvents
         }
 
         @SubscribeEvent
-        public static void onRenderLevel(RenderLevelStageEvent.AfterEntities event)
+        public static void onSubmitGeometry(SubmitCustomGeometryEvent event)
         {
-            QuickStackAnimations.render(event.getPoseStack(), event.getLevelRenderState().cameraRenderState.pos,
-                    Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
+            QuickStackAnimations.submit(event.getPoseStack(), event.getLevelRenderState().cameraRenderState.pos,
+                    Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false),
+                    event.getSubmitNodeCollector());
         }
 
         @SubscribeEvent

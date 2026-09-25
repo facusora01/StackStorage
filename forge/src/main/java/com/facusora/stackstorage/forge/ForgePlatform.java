@@ -22,7 +22,7 @@ public class ForgePlatform implements Platform
     @Override
     public String modVersion()
     {
-        return ModList.get().getModContainerById(StackStorage.MODID)
+        return ModList.getModContainerById(StackStorage.MODID)
                 .orElseThrow().getModInfo().getVersion().toString();
     }
 
