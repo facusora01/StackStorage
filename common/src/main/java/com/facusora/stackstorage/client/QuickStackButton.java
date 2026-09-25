@@ -9,7 +9,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -22,8 +22,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class QuickStackButton extends Button
 {
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/quick_stack_button.png");
+    private static final Identifier TEXTURE =
+            Identifier.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/quick_stack_button.png");
     // Texture is authored at 2x the logical size for crispness at higher GUI scales
     private static final int TEX_WIDTH = 40;
     private static final int TEX_HEIGHT = 72;
@@ -57,7 +57,7 @@ public class QuickStackButton extends Button
     }
 
     @Override
-    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick)
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick)
     {
         setX(screen.getGuiLeft() + X_OFFSET);
         setY(screen.getGuiTop() + Y_OFFSET);

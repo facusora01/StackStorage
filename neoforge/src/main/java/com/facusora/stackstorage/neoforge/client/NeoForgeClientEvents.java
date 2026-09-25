@@ -7,7 +7,7 @@ import com.facusora.stackstorage.client.UpdateChecker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -25,7 +25,7 @@ public class NeoForgeClientEvents
 {
     /** Key categories are registered ids since 1.21.9; the label is key.category.stackstorage.main. */
     public static final KeyMapping.Category CATEGORY = new KeyMapping.Category(
-            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "main"));
+            Identifier.fromNamespaceAndPath(StackStorage.MODID, "main"));
 
     public static final KeyMapping LOCK_SLOT_KEY = new KeyMapping(
             "key.stackstorage.lock_slot",

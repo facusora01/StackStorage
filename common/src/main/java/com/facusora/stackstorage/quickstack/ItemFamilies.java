@@ -1,7 +1,7 @@
 package com.facusora.stackstorage.quickstack;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -66,11 +66,11 @@ public final class ItemFamilies
      * netherite fills its two empty rows with the forms it actually has: ancient debris
      * where the nugget would go, then the scrap it smelts into.
      */
-    private static final Map<ResourceLocation, Family> UNTAGGED = Map.of(
-            ResourceLocation.withDefaultNamespace("coal"), new Family(Kind.MINERAL, "coal", 1),
-            ResourceLocation.withDefaultNamespace("charcoal"), new Family(Kind.MINERAL, "coal", 2),
-            ResourceLocation.withDefaultNamespace("ancient_debris"), new Family(Kind.MINERAL, "netherite", 2),
-            ResourceLocation.withDefaultNamespace("netherite_scrap"), new Family(Kind.MINERAL, "netherite", 3));
+    private static final Map<Identifier, Family> UNTAGGED = Map.of(
+            Identifier.withDefaultNamespace("coal"), new Family(Kind.MINERAL, "coal", 1),
+            Identifier.withDefaultNamespace("charcoal"), new Family(Kind.MINERAL, "coal", 2),
+            Identifier.withDefaultNamespace("ancient_debris"), new Family(Kind.MINERAL, "netherite", 2),
+            Identifier.withDefaultNamespace("netherite_scrap"), new Family(Kind.MINERAL, "netherite", 3));
 
     /** Column order, most valuable first. Materials missing here sort alphabetically after these. */
     private static final List<String> MINERAL_ORDER = List.of(
@@ -133,7 +133,7 @@ public final class ItemFamilies
         // result does not depend on tag iteration order.
         for (TagKey<Item> tag : stack.getTags().toList())
         {
-            ResourceLocation id = tag.location();
+            Identifier id = tag.location();
             if (!COMMON_TAG_NAMESPACES.contains(id.getNamespace()))
                 continue;
 

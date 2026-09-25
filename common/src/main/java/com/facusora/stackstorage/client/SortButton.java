@@ -12,7 +12,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -26,8 +26,8 @@ import java.util.function.Consumer;
  */
 public class SortButton extends Button
 {
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/sort_button.png");
+    private static final Identifier TEXTURE =
+            Identifier.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/sort_button.png");
     public static final int SIZE = 12;
 
     private static final int RIGHT_BUTTON = 1;
@@ -75,7 +75,7 @@ public class SortButton extends Button
     }
 
     @Override
-    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick)
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick)
     {
         int v = isHovered ? SIZE : 0;
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, getX(), getY(), 0, v, SIZE, SIZE, SIZE, SIZE * 2);

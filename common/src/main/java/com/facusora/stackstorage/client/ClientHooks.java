@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 
@@ -24,8 +24,8 @@ import java.util.function.Consumer;
  */
 public final class ClientHooks
 {
-    private static final ResourceLocation LOCK_STAR =
-            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/lock_star.png");
+    private static final Identifier LOCK_STAR =
+            Identifier.fromNamespaceAndPath(StackStorage.MODID, "textures/gui/lock_star.png");
 
     private ClientHooks()
     {

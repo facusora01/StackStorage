@@ -7,7 +7,7 @@ import com.facusora.stackstorage.network.SortContainerPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
@@ -25,7 +25,7 @@ public class NeoForgeNetworking
 
     public record QuickStack(QuickStackPacket packet) implements CustomPacketPayload
     {
-        static final Type<QuickStack> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "quick_stack"));
+        static final Type<QuickStack> TYPE = new Type<>(Identifier.fromNamespaceAndPath(StackStorage.MODID, "quick_stack"));
         static final StreamCodec<FriendlyByteBuf, QuickStack> CODEC = StreamCodec.of(
                 (buf, payload) -> QuickStackPacket.encode(payload.packet(), buf),
                 buf -> new QuickStack(QuickStackPacket.decode(buf)));
@@ -39,7 +39,7 @@ public class NeoForgeNetworking
 
     public record Sort(SortContainerPacket packet) implements CustomPacketPayload
     {
-        static final Type<Sort> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "sort_container"));
+        static final Type<Sort> TYPE = new Type<>(Identifier.fromNamespaceAndPath(StackStorage.MODID, "sort_container"));
         static final StreamCodec<FriendlyByteBuf, Sort> CODEC = StreamCodec.of(
                 (buf, payload) -> SortContainerPacket.encode(payload.packet(), buf),
                 buf -> new Sort(SortContainerPacket.decode(buf)));
@@ -53,7 +53,7 @@ public class NeoForgeNetworking
 
     public record Animation(QuickStackAnimationPacket packet) implements CustomPacketPayload
     {
-        static final Type<Animation> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "quick_stack_animation"));
+        static final Type<Animation> TYPE = new Type<>(Identifier.fromNamespaceAndPath(StackStorage.MODID, "quick_stack_animation"));
         static final StreamCodec<FriendlyByteBuf, Animation> CODEC = StreamCodec.of(
                 (buf, payload) -> QuickStackAnimationPacket.encode(payload.packet(), buf),
                 buf -> new Animation(QuickStackAnimationPacket.decode(buf)));

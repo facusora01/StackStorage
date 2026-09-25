@@ -4,7 +4,7 @@ import com.facusora.stackstorage.StackStorage;
 import com.facusora.stackstorage.network.QuickStackAnimationPacket;
 import com.facusora.stackstorage.network.QuickStackPacket;
 import com.facusora.stackstorage.network.SortContainerPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.network.CustomPayloadEvent;
@@ -20,7 +20,7 @@ public class ForgeNetworking
     private static final int PROTOCOL_VERSION = 1;
 
     public static final SimpleChannel CHANNEL = ChannelBuilder
-            .named(ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "main"))
+            .named(Identifier.fromNamespaceAndPath(StackStorage.MODID, "main"))
             .networkProtocolVersion(PROTOCOL_VERSION)
             .simpleChannel();
 

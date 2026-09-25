@@ -8,7 +8,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestData;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Rotation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
@@ -76,8 +76,8 @@ public final class NeoForgeGameTests
         }
     }
 
-    private static ResourceLocation id(String path)
+    private static Identifier id(String path)
     {
-        return ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, path);
+        return Identifier.fromNamespaceAndPath(StackStorage.MODID, path);
     }
 }

@@ -98,7 +98,7 @@ modrinth {
     versionName = "StackStorage ${mod_version} for Forge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['1.21.9', '1.21.10']
+    gameVersions = ['1.21.11']
     loaders = ['forge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }
