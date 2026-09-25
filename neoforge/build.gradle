@@ -34,6 +34,9 @@ neoForge {
             server()
             programArgument '--nogui'
         }
+        gameTestServer {
+            type = 'gameTestServer'
+        }
     }
 
     mods {
@@ -70,7 +73,7 @@ modrinth {
     versionName = "StackStorage ${mod_version} for NeoForge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['1.21.3', '1.21.4']
+    gameVersions = ['1.21.5']
     loaders = ['neoforge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }

@@ -1,17 +1,15 @@
-package com.facusora.stackstorage.gametest;
+package com.facusora.stackstorage.neoforge.gametest;
 
-import com.facusora.stackstorage.StackStorage;
 import com.facusora.stackstorage.quickstack.PathDistance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraftforge.gametest.GameTestHolder;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +20,6 @@ import java.util.Set;
  * each test and is 11 x 5 x 11; walls span its full height, so the only way round them
  * is over the top, which is always longer than the five block radius.
  */
-@GameTestHolder(StackStorage.MODID)
 public class PathDistanceGameTests
 {
     private static final int RADIUS = 5;
@@ -32,53 +29,49 @@ public class PathDistanceGameTests
     private static final BlockPos START = new BlockPos(1, 1, 5);
 
     /** Across open floor the distance is the straight line. */
-    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void openSpaceMatchesStraightLine(GameTestHelper helper)
     {
         BlockPos goal = new BlockPos(4, 1, 5);
         Double cost = measure(helper, goal, RADIUS);
 
-        helper.assertTrue(cost != null && Math.abs(cost - 3.0) < 1e-6,
+        check(helper, cost != null && Math.abs(cost - 3.0) < 1e-6,
                 "expected a clear distance of 3, got " + cost);
         helper.succeed();
     }
 
     /** A chest three blocks away through a wall is out of reach; the detour is far longer. */
-    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void wallPutsContainerOutOfReach(GameTestHelper helper)
     {
         wallAt(helper, 2);
         BlockPos goal = new BlockPos(4, 1, 5);
 
-        helper.assertTrue(measure(helper, goal, RADIUS) == null,
+        check(helper, measure(helper, goal, RADIUS) == null,
                 "a container behind a wall should not be within " + RADIUS);
 
         Double detour = measure(helper, goal, 20);
-        helper.assertTrue(detour != null && detour > RADIUS,
+        check(helper, detour != null && detour > RADIUS,
                 "the route over the wall should exist but be longer than " + RADIUS + ", got " + detour);
         helper.succeed();
     }
 
     /** A doorway in the wall only counts while the door is open. */
-    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void closedDoorBlocksOpenDoorPasses(GameTestHelper helper)
     {
         wallAt(helper, 3);
         BlockPos goal = new BlockPos(5, 1, 5);
 
         placeDoor(helper, new BlockPos(3, 1, 5), false);
-        helper.assertTrue(measure(helper, goal, RADIUS) == null,
+        check(helper, measure(helper, goal, RADIUS) == null,
                 "a closed door should block the way");
 
         placeDoor(helper, new BlockPos(3, 1, 5), true);
         Double cost = measure(helper, goal, RADIUS);
-        helper.assertTrue(cost != null && Math.abs(cost - 4.0) < 1e-6,
+        check(helper, cost != null && Math.abs(cost - 4.0) < 1e-6,
                 "an open door should let the flood straight through, got " + cost);
         helper.succeed();
     }
 
     /** Two blocks meeting at an edge cannot be squeezed between diagonally. */
-    @GameTest(template = StackStorage.MODID + ":open_room")
     public static void diagonalCannotCutACorner(GameTestHelper helper)
     {
         BlockPos start = new BlockPos(4, 1, 4);
@@ -90,7 +83,7 @@ public class PathDistanceGameTests
                 List.of(helper.absolutePos(start)), Set.of(helper.absolutePos(goal)), 10)
                 .get(helper.absolutePos(goal));
 
-        helper.assertTrue(cost != null && cost > Math.sqrt(2) + 0.5,
+        check(helper, cost != null && cost > Math.sqrt(2) + 0.5,
                 "the flood slipped through the corner: cost " + cost);
         helper.succeed();
     }
@@ -132,5 +125,11 @@ public class PathDistanceGameTests
                 door.setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER), flags);
         helper.getLevel().setBlock(helper.absolutePos(lower.above()),
                 door.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), flags);
+    }
+
+    /** Game test assertions take a Component since 1.21.5. */
+    private static void check(GameTestHelper helper, boolean condition, String message)
+    {
+        helper.assertTrue(condition, Component.literal(message));
     }
 }

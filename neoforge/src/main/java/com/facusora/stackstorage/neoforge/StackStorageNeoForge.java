@@ -1,6 +1,7 @@
 package com.facusora.stackstorage.neoforge;
 
 import com.facusora.stackstorage.StackStorage;
+import com.facusora.stackstorage.neoforge.gametest.NeoForgeGameTests;
 import com.facusora.stackstorage.platform.Services;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -19,5 +20,6 @@ public class StackStorageNeoForge
         container.registerConfig(ModConfig.Type.COMMON, NeoForgeConfig.SPEC);
         modBus.addListener(NeoForgeConfig::onLoad);
         modBus.addListener(NeoForgeNetworking::register);
+        NeoForgeGameTests.register(modBus);
     }
 }

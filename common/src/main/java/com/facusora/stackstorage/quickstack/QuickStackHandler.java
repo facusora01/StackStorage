@@ -60,7 +60,7 @@ public class QuickStackHandler
         containers.sort((a, b) -> Double.compare(a.distance, b.distance));
 
         List<QuickStackAnimationPacket.Transfer> transfers = new ArrayList<>();
-        List<ItemStack> playerItems = player.getInventory().items; // 36 slots: main + hotbar
+        List<ItemStack> playerItems = player.getInventory().getNonEquipmentItems(); // 36 slots: main + hotbar
         for (ItemStack stack : playerItems)
         {
             if (stack.isEmpty() || lockedItems.contains(stack.getItem()))
@@ -115,7 +115,7 @@ public class QuickStackHandler
     {
         long now = player.level().getGameTime();
         CompoundTag data = player.getPersistentData();
-        long readyAt = data.getLong(COOLDOWN_KEY);
+        long readyAt = data.getLongOr(COOLDOWN_KEY, 0L);
 
         // A value far in the future means it came from another world, not a real cooldown
         if (readyAt > now && readyAt <= now + COOLDOWN_TICKS)

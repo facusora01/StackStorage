@@ -1,24 +1,21 @@
-package com.facusora.stackstorage.gametest;
+package com.facusora.stackstorage.neoforge.gametest;
 
-import com.facusora.stackstorage.StackStorage;
 import com.facusora.stackstorage.quickstack.ContainerSortHandler;
 import com.facusora.stackstorage.quickstack.SortMode;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.gametest.GameTestHolder;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Covers the container layouts. These run against a bare container rather than a
- * placed chest, but they need a live server so Forge's material tags are bound.
+ * placed chest, but they need a live server so the material tags are bound.
  */
-@GameTestHolder(StackStorage.MODID)
 public class SortGameTests
 {
     private static final int DOUBLE_CHEST = 54;
@@ -26,7 +23,6 @@ public class SortGameTests
     private static final int WIDTH = 9;
 
     /** A double chest gets one column per material, one row per tier, gaps and all. */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalBuildsColumns(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -72,7 +68,6 @@ public class SortGameTests
      * A material with a single tier present still gets its own column, in its place in
      * the value order, rather than being dumped in with the unrecognised items.
      */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalOrdersSingleTierMinerals(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -98,7 +93,6 @@ public class SortGameTests
      * Pins the mineral column order, and the items that carry no Forge family tag:
      * charcoal rides under coal, and netherite runs block, ingot, debris, scrap.
      */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalUsesTheMineralValueOrder(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -129,8 +123,8 @@ public class SortGameTests
         // Charcoal sits directly under coal in the same column
         assertAt(helper, container, 1, 8, Items.CHARCOAL);
         // Only nine columns fit, so amethyst and quartz fall through to the leftovers
-        helper.assertTrue(tally(container).containsKey(Items.AMETHYST_SHARD), "amethyst went missing");
-        helper.assertTrue(tally(container).containsKey(Items.QUARTZ), "quartz went missing");
+        check(helper, tally(container).containsKey(Items.AMETHYST_SHARD), "amethyst went missing");
+        check(helper, tally(container).containsKey(Items.QUARTZ), "quartz went missing");
 
         helper.succeed();
     }
@@ -140,7 +134,6 @@ public class SortGameTests
      * have produced. Every stack of a material stays in its column with no rows held
      * back, and a full column spills into the nearest neighbour with room, bottom up.
      */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalSpillsFullColumnsIntoNeighbours(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -162,7 +155,7 @@ public class SortGameTests
 
         Map<Item, Integer> before = tally(container);
         ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
-        helper.assertTrue(before.equals(tally(container)), "item counts changed");
+        check(helper, before.equals(tally(container)), "item counts changed");
 
         Item[][] expected = {
                 {Items.NETHERITE_BLOCK, Items.DIAMOND_BLOCK, Items.EMERALD, Items.GOLD_INGOT,
@@ -194,7 +187,6 @@ public class SortGameTests
     }
 
     /** Two sets of the same armor stand side by side instead of the spare pieces going astray. */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalGivesEachArmorSetItsOwnColumn(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -213,7 +205,6 @@ public class SortGameTests
     }
 
     /** Three rows cannot hold a full armor set, so those containers stay alphabetical. */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalFallsBackOnShortContainer(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(SINGLE_CHEST);
@@ -227,7 +218,7 @@ public class SortGameTests
         assertAt(helper, container, 0, 0, Items.COBBLESTONE);
         assertAt(helper, container, 0, 1, Items.DIAMOND);
         assertAt(helper, container, 0, 2, Items.IRON_BLOCK);
-        helper.assertTrue(container.getItem(3).isEmpty(), "expected no gaps in the alphabetical fallback");
+        check(helper, container.getItem(3).isEmpty(), "expected no gaps in the alphabetical fallback");
 
         helper.succeed();
     }
@@ -236,7 +227,6 @@ public class SortGameTests
      * When the leftovers outgrow the free slots, the reserved gaps get used rather than
      * items getting dropped. A nearly full chest with one armor column forces that path.
      */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void verticalNeverLosesItems(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -249,7 +239,7 @@ public class SortGameTests
         ContainerSortHandler.sortContainer(container, SortMode.VERTICAL);
         Map<Item, Integer> after = tally(container);
 
-        helper.assertTrue(before.equals(after),
+        check(helper, before.equals(after),
                 "item counts changed: " + before + " -> " + after);
         // The sort really ran rather than bailing out
         assertAt(helper, container, 0, 0, Items.DIAMOND_HELMET);
@@ -258,7 +248,6 @@ public class SortGameTests
     }
 
     /** Alphabetical mode still merges partial stacks and packs them from the top. */
-    @GameTest(template = StackStorage.MODID + ":empty")
     public static void alphabeticalMergesStacks(GameTestHelper helper)
     {
         SimpleContainer container = new SimpleContainer(DOUBLE_CHEST);
@@ -270,7 +259,7 @@ public class SortGameTests
 
         assertAt(helper, container, 0, 0, Items.DIAMOND);
         assertAt(helper, container, 0, 1, Items.IRON_INGOT);
-        helper.assertTrue(container.getItem(1).getCount() == 50,
+        check(helper, container.getItem(1).getCount() == 50,
                 "expected the two ingot stacks merged into 50, got " + container.getItem(1).getCount());
 
         helper.succeed();
@@ -280,14 +269,14 @@ public class SortGameTests
     {
         int slot = row * WIDTH + column;
         Item actual = container.getItem(slot).getItem();
-        helper.assertTrue(actual == expected,
+        check(helper, actual == expected,
                 "row " + row + " column " + column + ": expected " + expected + " but found " + actual);
     }
 
     private static void assertEmptyAt(GameTestHelper helper, SimpleContainer container, int row, int column)
     {
         int slot = row * WIDTH + column;
-        helper.assertTrue(container.getItem(slot).isEmpty(),
+        check(helper, container.getItem(slot).isEmpty(),
                 "row " + row + " column " + column + " should have stayed empty, found "
                         + container.getItem(slot).getItem());
     }
@@ -302,5 +291,11 @@ public class SortGameTests
                 counts.merge(stack.getItem(), stack.getCount(), Integer::sum);
         }
         return counts;
+    }
+
+    /** Game test assertions take a Component since 1.21.5. */
+    private static void check(GameTestHelper helper, boolean condition, String message)
+    {
+        helper.assertTrue(condition, Component.literal(message));
     }
 }

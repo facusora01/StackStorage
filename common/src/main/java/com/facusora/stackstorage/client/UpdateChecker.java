@@ -101,7 +101,7 @@ public final class UpdateChecker
                 .withStyle(style -> style
                         .withColor(ChatFormatting.AQUA)
                         .withUnderlined(true)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, DOWNLOAD_URL)));
+                        .withClickEvent(new ClickEvent.OpenUrl(URI.create(DOWNLOAD_URL))));
 
         player.displayClientMessage(Component.translatable("chat.stackstorage.update", latestVersion)
                 .withStyle(ChatFormatting.YELLOW)
