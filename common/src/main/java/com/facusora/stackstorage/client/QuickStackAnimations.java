@@ -4,11 +4,11 @@ import com.facusora.stackstorage.network.QuickStackAnimationPacket;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -119,7 +119,7 @@ public class QuickStackAnimations
                 continue; // still waiting its turn, or already landed
 
             Vec3 position = item.positionAt(progress);
-            int light = LevelRenderer.getLightCoords(minecraft.level, BlockPos.containing(position));
+            int light = LightCoordsUtil.getLightCoords(minecraft.level, BlockPos.containing(position));
 
             pose.pushPose();
             pose.translate(position.x - camera.x, position.y - camera.y, position.z - camera.z);

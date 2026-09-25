@@ -7,18 +7,18 @@ import com.facusora.stackstorage.client.UpdateChecker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.ContainerScreenEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
-import org.lwjgl.glfw.GLFW;
+import org.joml.Matrix3x2fStack;
 
 /** Hands NeoForge's client events to the shared client code. */
 public class NeoForgeClientEvents
@@ -31,7 +31,7 @@ public class NeoForgeClientEvents
             "key.stackstorage.lock_slot",
             KeyConflictContext.GUI,
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_LEFT_ALT,
+            InputConstants.KEY_LALT,
             CATEGORY);
 
     @EventBusSubscriber(modid = StackStorage.MODID, value = Dist.CLIENT)
@@ -63,10 +63,22 @@ public class NeoForgeClientEvents
                 event.setCanceled(true);
         }
 
+        /**
+         * NeoForge 26.2 folded the container screen events into the generic screen
+         * one, which fires in screen space: the stars are placed in the menu's own
+         * coordinates, so they are shifted to the container's corner first.
+         */
         @SubscribeEvent
-        public static void onRenderForeground(ContainerScreenEvent.Render.Foreground event)
+        public static void onRenderForeground(ScreenEvent.Render.Foreground event)
         {
-            ClientHooks.renderLockStars(event.getContainerScreen(), event.getGuiGraphics());
+            if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen))
+                return;
+
+            Matrix3x2fStack pose = event.getGuiGraphics().pose();
+            pose.pushMatrix();
+            pose.translate(screen.getGuiLeft(), screen.getGuiTop());
+            ClientHooks.renderLockStars(screen, event.getGuiGraphics());
+            pose.popMatrix();
         }
 
         @SubscribeEvent

@@ -73,7 +73,7 @@ modrinth {
     versionName = "StackStorage ${mod_version} for NeoForge ${minecraft_version}"
     versionType = 'release'
     uploadFile = jar
-    gameVersions = ['26.1.2']
+    gameVersions = ['26.2']
     loaders = ['neoforge']
     changelog = rootProject.file('CHANGELOG.md').exists() ? rootProject.file('CHANGELOG.md').text : 'See commit history.'
 }

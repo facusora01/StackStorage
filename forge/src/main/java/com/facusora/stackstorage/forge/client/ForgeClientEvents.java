@@ -14,7 +14,6 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.bus.BusGroup;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Predicate;
 
@@ -35,7 +34,7 @@ public final class ForgeClientEvents
             "key.stackstorage.lock_slot",
             KeyConflictContext.GUI,
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_LEFT_ALT,
+            InputConstants.KEY_LALT,
             CATEGORY,
             0);
 
