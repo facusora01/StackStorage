@@ -54,8 +54,6 @@ public class QuickStackAnimations
     private static final int NO_OUTLINE = 0;
 
     private static final List<FlyingItem> ACTIVE = new ArrayList<>();
-    /** Rebuilt for each item as it is drawn; rendering is single threaded. */
-    private static final ItemStackRenderState ITEM_STATE = new ItemStackRenderState();
     private static long clientTicks;
 
     public static void play(QuickStackAnimationPacket packet)
@@ -126,9 +124,9 @@ public class QuickStackAnimations
             pose.translate(position.x - camera.x, position.y - camera.y, position.z - camera.z);
             pose.scale(SCALE, SCALE, SCALE);
             pose.mulPose(Axis.YP.rotationDegrees(now * SPIN_DEGREES_PER_TICK));
-            minecraft.getItemModelResolver().updateForTopItem(ITEM_STATE, item.stack,
+            minecraft.getItemModelResolver().updateForTopItem(item.renderState, item.stack,
                     ItemDisplayContext.GROUND, minecraft.level, null, 0);
-            ITEM_STATE.submit(pose, nodes, light, OverlayTexture.NO_OVERLAY, NO_OUTLINE);
+            item.renderState.submit(pose, nodes, light, OverlayTexture.NO_OVERLAY, NO_OUTLINE);
             pose.popPose();
         }
 
@@ -138,6 +136,12 @@ public class QuickStackAnimations
     private static class FlyingItem
     {
         final ItemStack stack;
+        /**
+         * One per item: a submit holds on to the state's model until the frame's
+         * features are drawn, so sharing one across items would draw them all as the
+         * last one.
+         */
+        final ItemStackRenderState renderState = new ItemStackRenderState();
         final Vec3 origin;
         /** Kept as the block so items heading for one container can share a queue. */
         final BlockPos target;
