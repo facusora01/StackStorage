@@ -28,7 +28,7 @@ public class NeoForgeClientEvents
             GLFW.GLFW_KEY_LEFT_ALT,
             "key.categories.stackstorage");
 
-    @EventBusSubscriber(modid = StackStorage.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = StackStorage.MODID, value = Dist.CLIENT)
     public static class ModBus
     {
         @SubscribeEvent
@@ -38,7 +38,7 @@ public class NeoForgeClientEvents
         }
     }
 
-    @EventBusSubscriber(modid = StackStorage.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = StackStorage.MODID, value = Dist.CLIENT)
     public static class GameBus
     {
         @SubscribeEvent
@@ -69,11 +69,10 @@ public class NeoForgeClientEvents
         }
 
         @SubscribeEvent
-        public static void onRenderLevel(RenderLevelStageEvent event)
+        public static void onRenderLevel(RenderLevelStageEvent.AfterEntities event)
         {
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES)
-                QuickStackAnimations.render(event.getPoseStack(), event.getCamera().getPosition(),
-                        event.getPartialTick().getGameTimeDeltaPartialTick(false));
+            QuickStackAnimations.render(event.getPoseStack(), event.getCamera().getPosition(),
+                    event.getPartialTick().getGameTimeDeltaPartialTick(false));
         }
 
         @SubscribeEvent

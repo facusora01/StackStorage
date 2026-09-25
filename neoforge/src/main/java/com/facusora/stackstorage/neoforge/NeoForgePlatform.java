@@ -8,6 +8,7 @@ import com.facusora.stackstorage.platform.Platform;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class NeoForgePlatform implements Platform
@@ -28,13 +29,13 @@ public class NeoForgePlatform implements Platform
     @Override
     public void sendToServer(QuickStackPacket packet)
     {
-        PacketDistributor.sendToServer(new NeoForgeNetworking.QuickStack(packet));
+        ClientPacketDistributor.sendToServer(new NeoForgeNetworking.QuickStack(packet));
     }
 
     @Override
     public void sendToServer(SortContainerPacket packet)
     {
-        PacketDistributor.sendToServer(new NeoForgeNetworking.Sort(packet));
+        ClientPacketDistributor.sendToServer(new NeoForgeNetworking.Sort(packet));
     }
 
     @Override

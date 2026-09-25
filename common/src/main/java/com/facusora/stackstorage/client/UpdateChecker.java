@@ -83,7 +83,7 @@ public final class UpdateChecker
     {
         return VERSIONS_API_URL.formatted(
                 jsonList(Services.PLATFORM.loaderName()),
-                jsonList(SharedConstants.getCurrentVersion().getName()));
+                jsonList(SharedConstants.getCurrentVersion().name()));
     }
 
     private static String jsonList(String value)

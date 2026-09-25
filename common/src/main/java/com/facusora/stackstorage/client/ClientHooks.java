@@ -11,7 +11,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -72,16 +72,16 @@ public final class ClientHooks
     /** Over a container screen's slots, in the menu's own coordinates. */
     public static void renderLockStars(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics)
     {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0, 0, 300);
+        // The GUI draws in layers since 1.21.6: a new stratum puts the stars over
+        // the slot items instead of behind them
+        guiGraphics.nextStratum();
         for (Slot slot : screen.getMenu().slots)
         {
             if (slot.container instanceof Inventory && slot.getContainerSlot() < 36
                     && SlotLocks.isLocked(slot.getItem()))
             {
-                guiGraphics.blit(RenderType::guiTextured, LOCK_STAR, slot.x - 2, slot.y - 2, 0, 0, 8, 8, 8, 8);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, LOCK_STAR, slot.x - 2, slot.y - 2, 0, 0, 8, 8, 8, 8);
             }
         }
-        guiGraphics.pose().popPose();
     }
 }

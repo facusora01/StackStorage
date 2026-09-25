@@ -49,7 +49,7 @@ public class QuickStackHandler
         if (isOnCooldown(player))
             return;
 
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         int radius = Config.quickStackRadius;
 
         List<ContainerEntry> containers = findNearbyContainers(level, player, radius);

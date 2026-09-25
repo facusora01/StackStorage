@@ -1,13 +1,10 @@
 package com.facusora.stackstorage.forge;
 
 import com.facusora.stackstorage.Config;
-import com.facusora.stackstorage.StackStorage;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 
-@Mod.EventBusSubscriber(modid = StackStorage.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ForgeConfig
 {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
@@ -19,9 +16,15 @@ public class ForgeConfig
 
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
-    @SubscribeEvent
-    static void onLoad(final ModConfigEvent event)
+    static void register(BusGroup modBusGroup)
     {
-        Config.quickStackRadius = QUICK_STACK_RADIUS.get();
+        ModConfigEvent.Loading.getBus(modBusGroup).addListener(ForgeConfig::onLoad);
+        ModConfigEvent.Reloading.getBus(modBusGroup).addListener(ForgeConfig::onLoad);
+    }
+
+    private static void onLoad(ModConfigEvent event)
+    {
+        if (event.getConfig().getSpec() == SPEC)
+            Config.quickStackRadius = QUICK_STACK_RADIUS.get();
     }
 }
