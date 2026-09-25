@@ -1,10 +1,12 @@
 package com.facusora.stackstorage.forge.client;
 
+import com.facusora.stackstorage.StackStorage;
 import com.facusora.stackstorage.client.ClientHooks;
 import com.facusora.stackstorage.client.QuickStackAnimations;
 import com.facusora.stackstorage.client.UpdateChecker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -25,12 +27,16 @@ import java.util.function.Predicate;
  */
 public final class ForgeClientEvents
 {
+    /** Key categories are registered ids since 1.21.9; the label is key.category.stackstorage.main. */
+    public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
+            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "main"));
+
     public static final KeyMapping LOCK_SLOT_KEY = new KeyMapping(
             "key.stackstorage.lock_slot",
             KeyConflictContext.GUI,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_LEFT_ALT,
-            "key.categories.stackstorage");
+            CATEGORY);
 
     private ForgeClientEvents()
     {

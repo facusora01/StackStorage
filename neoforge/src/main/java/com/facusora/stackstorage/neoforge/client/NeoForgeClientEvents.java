@@ -6,6 +6,8 @@ import com.facusora.stackstorage.client.QuickStackAnimations;
 import com.facusora.stackstorage.client.UpdateChecker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -21,12 +23,16 @@ import org.lwjgl.glfw.GLFW;
 /** Hands NeoForge's client events to the shared client code. */
 public class NeoForgeClientEvents
 {
+    /** Key categories are registered ids since 1.21.9; the label is key.category.stackstorage.main. */
+    public static final KeyMapping.Category CATEGORY = new KeyMapping.Category(
+            ResourceLocation.fromNamespaceAndPath(StackStorage.MODID, "main"));
+
     public static final KeyMapping LOCK_SLOT_KEY = new KeyMapping(
             "key.stackstorage.lock_slot",
             KeyConflictContext.GUI,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_LEFT_ALT,
-            "key.categories.stackstorage");
+            CATEGORY);
 
     @EventBusSubscriber(modid = StackStorage.MODID, value = Dist.CLIENT)
     public static class ModBus
@@ -34,6 +40,7 @@ public class NeoForgeClientEvents
         @SubscribeEvent
         public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event)
         {
+            event.registerCategory(CATEGORY);
             event.register(LOCK_SLOT_KEY);
         }
     }
@@ -71,8 +78,8 @@ public class NeoForgeClientEvents
         @SubscribeEvent
         public static void onRenderLevel(RenderLevelStageEvent.AfterEntities event)
         {
-            QuickStackAnimations.render(event.getPoseStack(), event.getCamera().getPosition(),
-                    event.getPartialTick().getGameTimeDeltaPartialTick(false));
+            QuickStackAnimations.render(event.getPoseStack(), event.getLevelRenderState().cameraRenderState.pos,
+                    Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
         }
 
         @SubscribeEvent

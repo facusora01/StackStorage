@@ -7,6 +7,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -41,9 +44,9 @@ public class SortButton extends Button
     }
 
     @Override
-    protected boolean isValidClickButton(int button)
+    protected boolean isValidClickButton(MouseButtonInfo info)
     {
-        return button == 0 || button == RIGHT_BUTTON;
+        return info.button() == 0 || info.button() == RIGHT_BUTTON;
     }
 
     /**
@@ -58,14 +61,14 @@ public class SortButton extends Button
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button)
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick)
     {
-        pressedMode = button == RIGHT_BUTTON ? SortMode.VERTICAL : SortMode.ALPHABETICAL;
-        return super.mouseClicked(mouseX, mouseY, button);
+        pressedMode = event.button() == RIGHT_BUTTON ? SortMode.VERTICAL : SortMode.ALPHABETICAL;
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public void onPress()
+    public void onPress(InputWithModifiers input)
     {
         onSort.accept(pressedMode);
         pressedMode = SortMode.ALPHABETICAL;

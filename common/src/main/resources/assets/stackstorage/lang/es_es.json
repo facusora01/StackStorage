@@ -3,7 +3,7 @@
   "button.stackstorage.quick_stack.tooltip": "Guarda tu inventario en cofres, barriles y cajas de shulker cercanos.\nPasa el ratón sobre un slot y pulsa ALT para bloquearlo y que nunca se guarde.",
   "button.stackstorage.sort": "Ordenar",
   "button.stackstorage.sort.tooltip": "Clic izquierdo: ordenar A-Z\nClic derecho: ordenar en vertical",
-  "key.categories.stackstorage": "StackStorage",
+  "key.category.stackstorage.main": "StackStorage",
   "key.stackstorage.lock_slot": "Bloquear/desbloquear slot",
   "chat.stackstorage.update": "¡Hay una nueva versión de StackStorage (%s) disponible!",
   "chat.stackstorage.update.link": "Click acá para descargarla."

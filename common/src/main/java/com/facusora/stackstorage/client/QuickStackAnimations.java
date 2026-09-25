@@ -5,7 +5,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -49,7 +51,11 @@ public class QuickStackAnimations
     private static final float SCALE = 0.75F;
     private static final float SPIN_DEGREES_PER_TICK = 10.0F;
 
+    private static final int NO_OUTLINE = 0;
+
     private static final List<FlyingItem> ACTIVE = new ArrayList<>();
+    /** Rebuilt for each item as it is drawn; rendering is single threaded. */
+    private static final ItemStackRenderState ITEM_STATE = new ItemStackRenderState();
     private static long clientTicks;
 
     public static void play(QuickStackAnimationPacket packet)
@@ -102,7 +108,9 @@ public class QuickStackAnimations
         if (minecraft.level == null)
             return;
 
-        MultiBufferSource.BufferSource buffers = minecraft.renderBuffers().bufferSource();
+        // Since 1.21.9 models are submitted as render states and drawn in one go by
+        // the feature dispatcher, the same pair the level renderer uses for entities
+        SubmitNodeStorage nodes = minecraft.gameRenderer.getSubmitNodeStorage();
         float now = clientTicks + partialTick;
 
         for (FlyingItem item : ACTIVE)
@@ -118,13 +126,13 @@ public class QuickStackAnimations
             pose.translate(position.x - camera.x, position.y - camera.y, position.z - camera.z);
             pose.scale(SCALE, SCALE, SCALE);
             pose.mulPose(Axis.YP.rotationDegrees(now * SPIN_DEGREES_PER_TICK));
-            minecraft.getItemRenderer().renderStatic(item.stack, ItemDisplayContext.GROUND,
-                    light, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,
-                    pose, buffers, minecraft.level, 0);
+            minecraft.getItemModelResolver().updateForTopItem(ITEM_STATE, item.stack,
+                    ItemDisplayContext.GROUND, minecraft.level, null, 0);
+            ITEM_STATE.submit(pose, nodes, light, OverlayTexture.NO_OVERLAY, NO_OUTLINE);
             pose.popPose();
         }
 
-        buffers.endBatch();
+        minecraft.gameRenderer.getFeatureRenderDispatcher().renderAllFeatures();
     }
 
     private static class FlyingItem
